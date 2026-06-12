@@ -1,0 +1,14 @@
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.126 kubectl get pods -n monitoring
+NAME                                                   READY   STATUS              RESTARTS   AGE     IP              NODE          NOMINATED NODE   READINESS GATES
+monitoring-grafana-cf467847b-6nccw                     3/3     Running             0          2m42s   10.244.4.6      k8s-worker2   <none>           <none>
+monitoring-kube-prometheus-operator-7455dc68c9-s8jrp   0/1     ContainerCreating   0          2m42s   <none>          k8s-worker1   <none>           <none>
+monitoring-kube-state-metrics-99d68447-6gjrp           1/1     Running             0          2m42s   10.244.5.7      k8s-worker3   <none>           <none>
+monitoring-prometheus-node-exporter-76l65              0/1     ContainerCreating   0          2m42s   192.168.0.129   k8s-worker1   <none>           <none>
+monitoring-prometheus-node-exporter-fqmbf              1/1     Running             0          2m42s   192.168.0.131   k8s-worker3   <none>           <none>
+monitoring-prometheus-node-exporter-hqw4f              1/1     Running             0          2m42s   192.168.0.126   k8s-master1   <none>           <none>
+monitoring-prometheus-node-exporter-k9s8h              1/1     Running             0          2m42s   192.168.0.130   k8s-worker2   <none>           <none>
+monitoring-prometheus-node-exporter-mj4td              1/1     Running             0          2m42s   192.168.0.127   k8s-master2   <none>           <none>
+monitoring-prometheus-node-exporter-vnz8n              0/1     ContainerCreating   0          2m42s   192.168.0.128   k8s-master3   <none>           <none>
+
+Grafana: http://IP:30542 (admin/admin)
+Prometheus: http://IP:30090
