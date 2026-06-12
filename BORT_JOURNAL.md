@@ -56,3 +56,10 @@ ssh ubuntu@192.168.0.126 "kubeadm token create --print-join-command"
 - [x] MinIO установлен в K8s (backup namespace)
 - [x] Velero v1.14.0 установлен
 - [x] Первый бэкап WordPress создан
+
+### Статус на конец сессии 2
+- [x] K8s кластер (3 master + 3 worker) — Ready
+- [x] WordPress + MariaDB — Running
+- [x] Ingress Controller — Running, WordPress доступен
+- [x] Prometheus + Grafana — установлены
+- [x] Velero — установлен, MinIO скачивается
