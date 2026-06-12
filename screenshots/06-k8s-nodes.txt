@@ -1,0 +1,42 @@
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.126 kubectl get nodes
+NAME          STATUS   ROLES           AGE   VERSION    INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+k8s-master1   Ready    control-plane   32m   v1.30.14   192.168.0.126   <none>        Ubuntu 24.04.4 LTS   6.8.0-117-generic   containerd://2.2.1
+k8s-master2   Ready    control-plane   28m   v1.30.14   192.168.0.127   <none>        Ubuntu 24.04.4 LTS   6.8.0-117-generic   containerd://2.2.1
+k8s-master3   Ready    control-plane   28m   v1.30.14   192.168.0.128   <none>        Ubuntu 24.04.4 LTS   6.8.0-117-generic   containerd://2.2.1
+k8s-worker1   Ready    <none>          27m   v1.30.14   192.168.0.129   <none>        Ubuntu 24.04.4 LTS   6.8.0-117-generic   containerd://2.2.1
+k8s-worker2   Ready    <none>          27m   v1.30.14   192.168.0.130   <none>        Ubuntu 24.04.4 LTS   6.8.0-117-generic   containerd://2.2.1
+k8s-worker3   Ready    <none>          27m   v1.30.14   192.168.0.131   <none>        Ubuntu 24.04.4 LTS   6.8.0-117-generic   containerd://2.2.1
+
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.126 kubectl get pods -A
+NAMESPACE       NAME                                      READY   STATUS      RESTARTS   AGE     IP              NODE          NOMINATED NODE   READINESS GATES
+ingress-nginx   ingress-nginx-admission-create-xbjsn      0/1     Completed   0          13m     10.244.3.3      k8s-worker1   <none>           <none>
+ingress-nginx   ingress-nginx-admission-patch-w6jkj       0/1     Completed   4          13m     10.244.5.2      k8s-worker3   <none>           <none>
+ingress-nginx   ingress-nginx-controller-7df66f8d-rvz98   1/1     Running     0          13m     10.244.5.5      k8s-worker3   <none>           <none>
+kube-flannel    kube-flannel-ds-bx8bk                     1/1     Running     0          8m41s   192.168.0.130   k8s-worker2   <none>           <none>
+kube-flannel    kube-flannel-ds-k8mb7                     1/1     Running     0          8m41s   192.168.0.128   k8s-master3   <none>           <none>
+kube-flannel    kube-flannel-ds-r29qc                     1/1     Running     0          8m41s   192.168.0.129   k8s-worker1   <none>           <none>
+kube-flannel    kube-flannel-ds-rs7gj                     1/1     Running     0          8m41s   192.168.0.131   k8s-worker3   <none>           <none>
+kube-flannel    kube-flannel-ds-rwvfd                     1/1     Running     0          8m41s   192.168.0.127   k8s-master2   <none>           <none>
+kube-flannel    kube-flannel-ds-zbwb8                     1/1     Running     0          8m41s   192.168.0.126   k8s-master1   <none>           <none>
+kube-system     coredns-55cb58b774-h28cp                  1/1     Running     0          31m     10.244.5.3      k8s-worker3   <none>           <none>
+kube-system     coredns-55cb58b774-nkg59                  1/1     Running     0          31m     10.244.4.2      k8s-worker2   <none>           <none>
+kube-system     etcd-k8s-master1                          1/1     Running     0          32m     192.168.0.126   k8s-master1   <none>           <none>
+kube-system     etcd-k8s-master2                          1/1     Running     0          27m     192.168.0.127   k8s-master2   <none>           <none>
+kube-system     etcd-k8s-master3                          1/1     Running     0          27m     192.168.0.128   k8s-master3   <none>           <none>
+kube-system     kube-apiserver-k8s-master1                1/1     Running     3          32m     192.168.0.126   k8s-master1   <none>           <none>
+kube-system     kube-apiserver-k8s-master2                1/1     Running     6          28m     192.168.0.127   k8s-master2   <none>           <none>
+kube-system     kube-apiserver-k8s-master3                1/1     Running     0          27m     192.168.0.128   k8s-master3   <none>           <none>
+kube-system     kube-controller-manager-k8s-master1       1/1     Running     2          32m     192.168.0.126   k8s-master1   <none>           <none>
+kube-system     kube-controller-manager-k8s-master2       1/1     Running     2          28m     192.168.0.127   k8s-master2   <none>           <none>
+kube-system     kube-controller-manager-k8s-master3       1/1     Running     0          27m     192.168.0.128   k8s-master3   <none>           <none>
+kube-system     kube-proxy-2h242                          1/1     Running     0          28m     192.168.0.127   k8s-master2   <none>           <none>
+kube-system     kube-proxy-4rkxs                          1/1     Running     0          27m     192.168.0.130   k8s-worker2   <none>           <none>
+kube-system     kube-proxy-bgw97                          1/1     Running     0          27m     192.168.0.129   k8s-worker1   <none>           <none>
+kube-system     kube-proxy-hkn4d                          1/1     Running     0          27m     192.168.0.131   k8s-worker3   <none>           <none>
+kube-system     kube-proxy-x5hb2                          1/1     Running     0          28m     192.168.0.128   k8s-master3   <none>           <none>
+kube-system     kube-proxy-zjfhp                          1/1     Running     0          31m     192.168.0.126   k8s-master1   <none>           <none>
+kube-system     kube-scheduler-k8s-master1                1/1     Running     2          32m     192.168.0.126   k8s-master1   <none>           <none>
+kube-system     kube-scheduler-k8s-master2                1/1     Running     2          27m     192.168.0.127   k8s-master2   <none>           <none>
+kube-system     kube-scheduler-k8s-master3                1/1     Running     0          27m     192.168.0.128   k8s-master3   <none>           <none>
+wordpress       wordpress-985bbbff6-rrf5w                 1/1     Running     0          7m34s   10.244.4.4      k8s-worker2   <none>           <none>
+wordpress       wordpress-985bbbff6-wxdz4                 1/1     Running     0          7m34s   10.244.5.4      k8s-worker3   <none>           <none>
