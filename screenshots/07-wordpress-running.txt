@@ -1,0 +1,7 @@
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.126 kubectl get pods -n wordpress -o wide
+NAME                        READY   STATUS    RESTARTS   AGE     IP           NODE          NOMINATED NODE   READINESS GATES
+mariadb-5d5c74df88-rfs2g    1/1     Running   0          3m35s   10.244.3.5   k8s-worker1   <none>           <none>
+wordpress-b68d45994-859v2   1/1     Running   0          3m34s   10.244.3.6   k8s-worker1   <none>           <none>
+wordpress-b68d45994-l2grj   1/1     Running   0          3m33s   10.244.4.5   k8s-worker2   <none>           <none>
+
+WordPress доступен: http://192.168.0.131:30223/wp-admin/install.php

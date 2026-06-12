@@ -45,3 +45,9 @@ ssh ubuntu@192.168.0.126 "kubeadm token create --print-join-command"
 - [x] Проблема: Flannel CrashLoopBackOff (br_netfilter) → modprobe br_netfilter
 - [x] WordPress: 2 пода Running (worker2, worker3)
 - [x] Ingress Controller устанавливается
+
+### WordPress + MariaDB в K8s
+- [x] MariaDB развёрнута в K8s (Deployment + Service)
+- [x] WordPress переподключён к MariaDB
+- [x] Ingress работает: http://192.168.0.131:30223
+- [x] Страница установки WordPress открывается
