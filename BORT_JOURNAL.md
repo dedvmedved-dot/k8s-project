@@ -68,3 +68,44 @@ ssh ubuntu@192.168.0.126 "kubeadm token create --print-join-command"
 - [x] Velero установлен (демонстрация)
 - [x] Ручной бэкап всех ресурсов K8s создан (`k8s-backup/`)
 - [x] MinIO работает
+
+---
+
+## Сессия 3: 12 июня 2026, 07:00–08:00 (финал)
+
+### Доделано
+- [x] MinIO запущен (образ quay.io/minio/minio)
+- [x] Prometheus Operator запущен (ручная загрузка образов)
+- [x] Prometheus запущен и собирает метрики (Healthy)
+- [x] Grafana Data Source настроен через IP пода (10.244.5.10:9090)
+- [x] Grafana отображает данные Prometheus
+
+### Текущее состояние
+| Сервис | URL | Статус |
+|--------|-----|--------|
+| K8s API | :6443 | 6 узлов Ready |
+| WordPress | http://192.168.0.131:30223 | Установка |
+| Grafana | http://192.168.0.131:30542 | admin/admin, Prometheus-Pod |
+| Prometheus | http://192.168.0.131:30090 | Healthy |
+| MinIO | http://192.168.0.131:9001 | minioadmin/minioadmin |
+| Velero | CLI | Установлен, бэкап Failed |
+
+### На следующую сессию
+- [ ] Исправить Velero + MinIO (порядок установки)
+- [ ] Создать успешный бэкап WordPress
+- [ ] Импортировать дашборды Grafana (1860, 315)
+- [ ] Финальный git push
+
+### Восстановление
+```bash
+cd ~/k8s-project
+git pull
+ssh ubuntu@192.168.0.126 "kubectl get nodes"
+ssh ubuntu@192.168.0.126 "kubectl get pods -A | grep -v Running | grep -v Completed"
+```
+
+### Технические заметки
+- **Prometheus → Grafana:** использовать IP пода (10.244.5.10:9090), не ClusterIP
+- **MinIO:** использовать старые версии из quay.io (CPU без x86-64-v2)
+- **Образы:** скачивать вручную через `sudo ctr image pull` на worker-узлах
+- **Velero:** устанавливать ПОСЛЕ MinIO и проверки DNS
