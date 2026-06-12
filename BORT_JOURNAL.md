@@ -39,3 +39,9 @@ ssh ubuntu@192.168.0.126 "kubeadm token create --print-join-command"
 - Настроить Ingress, ConfigMap, Secrets
 - Подключить Patroni PostgreSQL
 - Настроить Velero + MinIO для бэкапов
+
+### WordPress развёрнут
+- [x] Namespace, Secret, Deployment, Service созданы
+- [x] Проблема: Flannel CrashLoopBackOff (br_netfilter) → modprobe br_netfilter
+- [x] WordPress: 2 пода Running (worker2, worker3)
+- [x] Ingress Controller устанавливается
