@@ -1,0 +1,187 @@
+digraph AIOps_Final {
+    rankdir=TB;
+    fontname="Arial";
+    fontsize=11;
+    bgcolor="white";
+    splines=ortho;
+    compound=true;
+    
+    node [fontname="Arial", fontsize=11, fontcolor="black", style=filled];
+    edge [fontname="Arial", fontsize=9, fontcolor="black"];
+    
+    labelloc="t";
+    label="Целевая архитектура AIOps-системы (Этапы 1 → 2 → 3)";
+    fontsize=18;
+    fontcolor="black";
+    
+    subgraph cluster_legend {
+        label="ЛЕГЕНДА";
+        fontsize=12;
+        style=filled;
+        fillcolor="#FAFAFA";
+        color="#999999";
+        penwidth=1;
+        
+        node [shape=box, style=filled, width=1.5, fontsize=10];
+        
+        l1 [label="Этап 1\n(Сентябрь)", fillcolor="#E0F2F1", color="#00695C"];
+        l2 [label="Этап 2\n(Декабрь)", fillcolor="#FFF3E0", color="#E65100"];
+        l3 [label="Этап 3\n(Июнь 2027)", fillcolor="#FCE4EC", color="#880E4F"];
+        l4 [label="Механизм\nрасширения", fillcolor="#EDE7F6", color="#4527A0", style=dashed];
+        
+        l1 -> l2 -> l3 -> l4 [style=invis];
+    }
+    
+    // СЛОЙ 0: ВНЕШНИЕ СИСТЕМЫ
+    subgraph cluster_external {
+        label="ПОДКЛЮЧАЕМЫЕ ВНЕШНИЕ СИСТЕМЫ (Расширение)";
+        fontsize=14;
+        style=filled;
+        fillcolor="#EDE7F6";
+        color="#4527A0";
+        penwidth=2;
+        
+        node [shape=cylinder, style=filled, fillcolor="#FFFFFF", color="black", penwidth=1, fontsize=9];
+        
+        cloud [label="Облачные\nплатформы"];
+        infosys [label="Информационные\nсистемы"];
+        k8s_ext [label="Kubernetes\nкластеры"];
+        baremetal [label="Физические\nсерверы"];
+        external_pac [label="Другие\nПАК"];
+        
+        node [shape=box, style="filled,rounded,dashed", fillcolor="#FFFFFF", color="#4527A0", penwidth=1, fontsize=9];
+        
+        universal_agent [label="Универсальный\nагент сбора\n(Vector/Fluentd)"];
+    }
+    
+    // СЛОЙ 1: ИСТОЧНИКИ
+    subgraph cluster_sources {
+        label="СЛОЙ 1: Источники логов (ПАК визуализации)";
+        fontsize=14;
+        style=filled;
+        fillcolor="#E0F2F1";
+        color="#00695C";
+        penwidth=2;
+        
+        node [shape=box, style="filled,rounded", fillcolor="#FFFFFF", color="black", penwidth=1, fontsize=9, width=1.8];
+        
+        astra [label="Astra Linux\n(s01-s04)"];
+        freeipa [label="FreeIPA\n(dc1, dc2)"];
+        opennebula [label="OpenNebula\n(fr1, fr2, fr3)"];
+        ceph [label="Ceph\n(s01-s03)"];
+        kvm [label="KVM + libvirt\n(s01-s03)"];
+    }
+    
+    // СЛОЙ 2: СБОР
+    subgraph cluster_pipeline {
+        label="СЛОЙ 2: Сбор и транспорт";
+        fontsize=14;
+        style=filled;
+        fillcolor="#E0F2F1";
+        color="#00695C";
+        penwidth=2;
+        
+        node [shape=box, style="filled,rounded", fillcolor="#FFFFFF", color="black", penwidth=1, fontsize=9, width=1.8];
+        
+        vector [label="Vector (агенты)"];
+        syslog_ng [label="Syslog-ng"];
+        kafka_pipe [label="Kafka\n(буфер)"];
+        
+        vector -> kafka_pipe [color="black", penwidth=1];
+        syslog_ng -> kafka_pipe [color="black", penwidth=1];
+    }
+    
+    // СЛОЙ 3: ОБРАБОТКА
+    subgraph cluster_processing {
+        label="СЛОЙ 3: Обработка";
+        fontsize=14;
+        style=filled;
+        fillcolor="#FFF3E0";
+        color="#E65100";
+        penwidth=2;
+        
+        node [shape=box, style="filled,rounded", fillcolor="#FFFFFF", color="black", penwidth=1, fontsize=9, width=1.8];
+        
+        flink [label="Flink\n(потоковая)"];
+        clickhouse [label="ClickHouse\n(пакетная)"];
+        
+        flink -> clickhouse [color="black", penwidth=2];
+    }
+    
+    // СЛОЙ 4: AI
+    subgraph cluster_ai {
+        label="СЛОЙ 4: ML и LLM";
+        fontsize=14;
+        style=filled;
+        fillcolor="#FCE4EC";
+        color="#880E4F";
+        penwidth=2;
+        
+        node [shape=box, style="filled,rounded", fillcolor="#FFFFFF", color="black", penwidth=1, fontsize=9, width=1.8];
+        
+        ml [label="ML модели\n(4 шт)"];
+        local_llm [label="Локальные LLM\n(DeepSeek, Qwen)"];
+        external_llm [label="Внешние LLM API\n(ChatGPT, Gemini,\nPerplexity)"];
+        
+        ml -> local_llm [color="black", penwidth=1];
+        local_llm -> external_llm [style=dashed, color="#4527A0", penwidth=1];
+    }
+    
+    // СЛОЙ 5: ВИЗУАЛИЗАЦИЯ
+    subgraph cluster_viz {
+        label="СЛОЙ 5: Визуализация";
+        fontsize=14;
+        style=filled;
+        fillcolor="#E8EAF6";
+        color="#283593";
+        penwidth=2;
+        
+        node [shape=box, style="filled,rounded", fillcolor="#FFFFFF", color="black", penwidth=1, fontsize=9, width=1.8];
+        
+        grafana [label="Grafana\n(дашборды)"];
+        api [label="REST API"];
+        alerts [label="AlertManager"];
+    }
+    
+    // СВЯЗИ
+    astra -> vector [color="black", penwidth=1];
+    freeipa -> vector [color="black", penwidth=1];
+    opennebula -> vector [color="black", penwidth=1];
+    ceph -> vector [color="black", penwidth=1];
+    kvm -> vector [color="black", penwidth=1];
+    
+    kafka_pipe -> flink [color="black", penwidth=2];
+    flink -> ml [color="black", penwidth=1];
+    clickhouse -> ml [color="black", penwidth=1];
+    
+    local_llm -> grafana [color="black", penwidth=1];
+    local_llm -> api [color="black", penwidth=1];
+    clickhouse -> grafana [color="black", penwidth=1];
+    
+    // РАСШИРЕНИЕ
+    cloud -> universal_agent [color="#4527A0", penwidth=1, style=dashed];
+    infosys -> universal_agent [color="#4527A0", penwidth=1, style=dashed];
+    k8s_ext -> universal_agent [color="#4527A0", penwidth=1, style=dashed];
+    baremetal -> universal_agent [color="#4527A0", penwidth=1, style=dashed];
+    external_pac -> universal_agent [color="#4527A0", penwidth=1, style=dashed];
+    
+    universal_agent -> vector [label="API приёма", color="#4527A0", penwidth=2, style=dashed, fontcolor="#4527A0"];
+    
+    // БЭКАП
+    subgraph cluster_backup {
+        label="Бэкап";
+        fontsize=12;
+        style=filled;
+        fillcolor="#ECEFF1";
+        color="#546E7A";
+        penwidth=2;
+        
+        node [shape=cylinder, style=filled, fillcolor="#FFFFFF", color="black", penwidth=1, fontsize=9];
+        
+        minio [label="MinIO (S3)"];
+        velero [label="Velero (K8s)"];
+    }
+    
+    clickhouse -> minio [color="black", penwidth=1, style=dashed];
+    velero -> minio [color="black", penwidth=1];
+}
