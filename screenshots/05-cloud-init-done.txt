@@ -1,0 +1,7 @@
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.125 cat /tmp/cloud-init-done
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.125 systemctl status qemu-guest-agent --no-pager | head -5
+● qemu-guest-agent.service - QEMU Guest Agent
+     Loaded: loaded (/usr/lib/systemd/system/qemu-guest-agent.service; static)
+     Active: active (running) since Fri 2026-06-12 01:01:08 UTC; 5min ago
+   Main PID: 682 (qemu-ga)
+      Tasks: 2 (limit: 2315)

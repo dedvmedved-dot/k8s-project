@@ -1,0 +1,2 @@
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.125 hostname; ip addr show ens18 | grep inet
+ubuntu-template

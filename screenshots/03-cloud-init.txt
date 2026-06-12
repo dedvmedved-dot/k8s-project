@@ -1,0 +1,21 @@
+sk@skhome01:~/k8s-project$ ssh root@192.168.0.200 cat /var/lib/vz/snippets/cloud-init-9000.yaml
+#cloud-config
+hostname: ubuntu-template
+users:
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxJR69Hu6THP/OH0tIaHEMURwMCMj8oGF8NGNvF1T2la/8NBFMoX74XJztMlS7RTvoTxpfn/qlK91sCKN3ci9TJ8qfgH6e0jj4fA23+hkC1Re3o9wMUHmMpUfHrzlNDsAqBOemNKBRAKQfoR2DLzzKWNfacJ+j6S0Bkd3xsqhfKlNxERSbTmk8oQ8z0MhbQtkwFS/wQwoB9mrQwE6vqNNGK0G6a3oIhlEG5drMwnmeRQaCqdWY0X7/fL4LSZUNQ6FwBYs2r1ixRxCZgw240jQFweoLuH0swlFF9gsJv0CSzRrOUZitmg6quJuzeQpFgSu8QWQxZBXqcD338fSgFuY7zeTWKWuKpVpe90qQifgPTUyj81rlnm6klhSltsyrufry3UWmlKG/Jyi93GnGY2VAI0Ht11KMLtCWuJoCysk3wOontHT+w+Duzre3u2DCG+oLn/rnLgFiPBq6YPjYFyh4mJbxHfQI2jiP4aCNn23XHC+Svb4oRTcgFR9wvrCSDrYZ4MG9Ogu+C4Fy4gLml3gxeFGYwLHoAh6DJcXjwpoVdwndpqZhlou8ZhRecGnRfQfdfz9wL8p1q8u48xzqp4998AnH5wsXqsDtQGtX4icygUHpgdbuJXZDvm+sES5OyAEm953NT2ABxI5f4174SvYCfoJqem0aKHmiKM9Sobcb+w== sk@skhome01
+packages:
+  - qemu-guest-agent
+  - net-tools
+  - curl
+  - wget
+package_update: true
+package_upgrade: true
+runcmd:
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+  - echo "Cloud-init completed" > /tmp/cloud-init-done

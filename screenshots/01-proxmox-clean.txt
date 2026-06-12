@@ -1,0 +1,4 @@
+sk@skhome01:~/k8s-project$ ssh root@192.168.0.200 qm list
+      VMID NAME                 STATUS     MEM(MB)    BOOTDISK(GB) PID       
+       100 test-cloud-init      running    2048               3.50 97239     
+      9000 ubuntu-2404-template stopped    2048               3.50 0         
