@@ -1,0 +1,16 @@
+digraph Deployment_Flow {
+    label="Процесс развёртывания K8s и WordPress";
+    labelloc=t; fontsize=20; fontname="Arial";
+    rankdir=TB; splines=ortho; nodesep=0.6; ranksep=0.4;
+    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
+    
+    s1 [label="1. Создание шаблона ВМ\nUbuntu 24.04 Cloud Image\nCloud-init + Guest Agent", fillcolor="#E0F2F1", style=filled];
+    s2 [label="2. Клонирование 6 ВМ\n3 master + 3 worker\nРасширение дисков до 20GB", fillcolor="#E0F2F1", style=filled];
+    s3 [label="3. Установка K8s\nkubeadm init\nПодключение узлов\nFlannel CNI", fillcolor="#E0F2F1", style=filled];
+    s4 [label="4. WordPress\nDeployment + Service\nSecret + ConfigMap\nIngress", fillcolor="#FFF3E0", style=filled];
+    s5 [label="5. Мониторинг\nPrometheus + Grafana\nHelm chart", fillcolor="#FFF3E0", style=filled];
+    s6 [label="6. Бэкап\nMinIO + Velero\nkubectl get all -o yaml", fillcolor="#FFF3E0", style=filled];
+    s7 [label="ГОТОВО", shape=oval, fillcolor="#C8E6C9", style=filled];
+    
+    s1 -> s2 -> s3 -> s4 -> s5 -> s6 -> s7;
+}

@@ -1,0 +1,6 @@
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.126 kubectl get pods -n backup
+NAME                     READY   STATUS        RESTARTS   AGE
+minio-5b94fbc58c-bb8zt   0/1     Terminating   0          38m
+minio-794575dbcd-j5st6   1/1     Running       0          12m
+minio-86f7f469dd-k9zhm   0/1     Terminating   0          25m
+minio-86f7f469dd-ltdxp   0/1     Terminating   0          31m

@@ -1,0 +1,8 @@
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.126 kubectl get nodes -o wide
+NAME          STATUS   ROLES           AGE   VERSION    INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+k8s-master1   Ready    control-plane   95m   v1.30.14   192.168.0.126   <none>        Ubuntu 24.04.4 LTS   6.8.0-117-generic   containerd://2.2.1
+k8s-master2   Ready    control-plane   91m   v1.30.14   192.168.0.127   <none>        Ubuntu 24.04.4 LTS   6.8.0-117-generic   containerd://2.2.1
+k8s-master3   Ready    control-plane   91m   v1.30.14   192.168.0.128   <none>        Ubuntu 24.04.4 LTS   6.8.0-117-generic   containerd://2.2.1
+k8s-worker1   Ready    <none>          91m   v1.30.14   192.168.0.129   <none>        Ubuntu 24.04.4 LTS   6.8.0-117-generic   containerd://2.2.1
+k8s-worker2   Ready    <none>          91m   v1.30.14   192.168.0.130   <none>        Ubuntu 24.04.4 LTS   6.8.0-117-generic   containerd://2.2.1
+k8s-worker3   Ready    <none>          91m   v1.30.14   192.168.0.131   <none>        Ubuntu 24.04.4 LTS   6.8.0-117-generic   containerd://2.2.1

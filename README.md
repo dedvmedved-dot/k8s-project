@@ -1,134 +1,191 @@
-# Kubernetes Project — Этап 1: Подготовка Proxmox
+# Kubernetes Project — Деплой веб-проекта в K8s
 
-## Выполненные шаги
+## Содержание
 
-### 1. Очистка Proxmox
-Удалены все старые ВМ, очищены хранилища ISO и snippets.
-
-### 2. Настройка Cloud-init и Guest Agent
-- Создан snippets storage для cloud-init
-- Скачан Ubuntu 24.04 Cloud Image
-- Создан шаблон ВМ (ID 9000) с предустановленным Guest Agent
-- Cloud-init настроен на автоматическую установку пакетов и запуск сервисов
-
-### 3. Тестовая ВМ
-- Клонирована тестовая ВМ (ID 100) из шаблона
-- Guest Agent работает
-- Cloud-init успешно выполнил настройку
-
-## Структура проекта
-```
-k8s-project/
-├── README.md
-├── screenshots/
-├── terraform/
-├── ansible/
-└── k8s-manifests/
-```
+1. [Цель проекта](#1-цель-проекта)
+2. [Архитектура K8s кластера](#2-архитектура-k8s-кластера)
+3. [Процесс развёртывания](#3-процесс-развёртывания)
+4. [WordPress + MariaDB](#4-wordpress--mariadb)
+5. [Мониторинг: Prometheus + Grafana](#5-мониторинг-prometheus--grafana)
+6. [Бэкап: Velero + MinIO](#6-бэкап-velero--minio)
+7. [Пройденные трудности](#7-пройденные-трудности)
+8. [Проверка работы](#8-проверка-работы)
+9. [Структура проекта](#9-структура-проекта)
 
 ---
 
-## Целевая архитектура AIOps-системы
+## 1. Цель проекта
 
-Принята на сессии 12 июня 2026.
+Развернуть отказоустойчивый кластер Kubernetes, задеплоить веб-портал WordPress с базой данных, настроить мониторинг и бэкап.
 
-![Целевая архитектура AIOps](screenshots/AIOps_Final.svg)
-
-### Легенда (цвета этапов)
-
-| Цвет | Этап | Срок |
-|------|------|------|
-| 🟢 Зелёный | Этап 1: Фундамент | 1 сентября 2026 |
-| 🟠 Оранжевый | Этап 2: AIOps пилот | 1 декабря 2026 |
-| 🩷 Розовый | Этап 3: Диссертация | 1 июня 2027 |
-| 🟣 Фиолетовый пунктир | Механизм расширения | По мере подключения |
-
-### 5 слоёв системы
-
-**Слой 1: Источники логов (ПАК визуализации)**
-- Astra Linux (s01-s04): syslog, kern.log, auth.log, journald
-- FreeIPA (dc1, dc2): ipactl, bind9, krb5kdc, dirsrv
-- OpenNebula (fr1, fr2, fr3): oned.log, sunstone, RAFT
-- Ceph (s01-s03): ceph status, OSD, MON, MGR
-- KVM + libvirt (s01-s03): libvirtd.log, qemu, статусы ВМ
-
-**Слой 2: Сбор и транспорт**
-- Vector (агенты) / Syslog-ng (центральный приёмник)
-- Kafka (буфер сообщений, 3 брокера)
-
-**Слой 3: Обработка**
-- Flink (потоковая): парсинг → аномалии → агрегация
-- ClickHouse (пакетная): raw_logs → metrics → anomalies
-
-**Слой 4: ML и LLM аналитика**
-- ML модели: Isolation Forest, Random Forest, Prophet, K-Means
-- Локальные LLM: DeepSeek, Qwen (первичный анализ)
-- Внешние LLM API: ChatGPT, Perplexity, Gemini, DeepSeek (верификация)
-
-**Слой 5: Визуализация и действия**
-- Grafana (дашборды и алерты)
-- REST API (интеграция с внешними системами)
-- AlertManager (уведомления в Telegram, почту)
-
-### Механизм расширения
-
-Любая внешняя система (облачные платформы, ИС, K8s-кластеры, физические серверы, другие ПАК) подключается через **универсальный агент** (Vector/Fluentd). Агент отправляет логи в общий пайплайн через API приёма. Все компоненты обработки работают с логами любых источников без изменений — на этапе парсинга логи приводятся к единой схеме.
-
-### Подключаемые LLM
-
-Локальные модели (DeepSeek, Qwen) выполняют первичный анализ. Для сложных запросов или верификации запрос автоматически направляется к внешним API (ChatGPT, Perplexity, Gemini). Замена локальной модели производится через конфигурацию без изменения кода.
-
+**Требования ДЗ:**
+- ✅ K8s кластер (kubeadm)
+- ✅ Веб-портал в YAML-манифестах
+- ✅ ConfigMap, Secret, Ingress
+- ✅ Бэкап конфигурации кластера
 
 ---
 
-## Архитектура Kubernetes кластера
+## 2. Архитектура K8s кластера
 
-![K8s Cluster](screenshots/K8s_Cluster.svg)
+##Схема: Архитектура K8s кластера
+![Архитектура K8s](screenshots/K8s_Architecture.svg)
 
-### Структура кластера
-
-Кластер состоит из **6 узлов** (виртуальных машин), развёрнутых в Proxmox VE 9.2:
+Кластер состоит из 6 узлов:
 
 | Узел | IP | Роль | Ресурсы |
 |------|-----|------|---------|
-| k8s-master1 | 192.168.0.126 | Control Plane | 2 CPU, 4 GB RAM, 20 GB disk |
-| k8s-master2 | 192.168.0.127 | Control Plane | 2 CPU, 4 GB RAM, 20 GB disk |
-| k8s-master3 | 192.168.0.128 | Control Plane | 2 CPU, 4 GB RAM, 20 GB disk |
-| k8s-worker1 | 192.168.0.129 | Worker | 2 CPU, 4 GB RAM, 20 GB disk |
-| k8s-worker2 | 192.168.0.130 | Worker | 2 CPU, 4 GB RAM, 20 GB disk |
-| k8s-worker3 | 192.168.0.131 | Worker | 2 CPU, 4 GB RAM, 20 GB disk |
+| k8s-master1 | 192.168.0.126 | Control Plane | 2 CPU, 4 GB, 20 GB |
+| k8s-master2 | 192.168.0.127 | Control Plane | 2 CPU, 4 GB, 20 GB |
+| k8s-master3 | 192.168.0.128 | Control Plane | 2 CPU, 4 GB, 20 GB |
+| k8s-worker1 | 192.168.0.129 | Worker | 2 CPU, 4 GB, 20 GB |
+| k8s-worker2 | 192.168.0.130 | Worker | 2 CPU, 4 GB, 20 GB |
+| k8s-worker3 | 192.168.0.131 | Worker | 2 CPU, 4 GB, 20 GB |
 
-### Как устроен и как работает
+### Как работает K8s
 
-**Control Plane (Master-узлы)** — управляющий слой кластера. Три мастер-узла образуют отказоустойчивый кластер etcd (распределённое key-value хранилище конфигурации) на основе алгоритма консенсуса Raft. Для принятия решения требуется кворум ≥ 2 из 3 узлов. При отказе одного мастера кластер продолжает работу. Основные компоненты:
+**Control Plane** управляет кластером через etcd (распределённое хранилище конфигурации на основе Raft). API Server принимает запросы, Scheduler распределяет поды, Controller Manager поддерживает желаемое состояние.
 
-- **etcd** — распределённое хранилище всей конфигурации кластера
-- **API Server (kube-apiserver)** — центральный управляющий компонент, принимает REST-запросы от kubectl и внутренних компонентов
-- **Scheduler (kube-scheduler)** — распределяет поды по worker-узлам на основе доступных ресурсов
-- **Controller Manager (kube-controller-manager)** — поддерживает желаемое состояние кластера (Deployment, ReplicaSet, и т.д.)
+**Worker Nodes** исполняют контейнеры через containerd. kubelet управляет подами, kube-proxy настраивает сетевые правила.
 
-**Worker-узлы** — исполняющий слой, где запускаются контейнеры приложений:
+**Flannel CNI** обеспечивает сеть подов (10.244.0.0/16) через VXLAN-туннели.
 
-- **kubelet** — агент, который получает команды от API Server и управляет подами
-- **kube-proxy** — сетевой прокси, настраивает правила iptables/IPVS для доступа к сервисам
-- **Container Runtime (containerd)** — среда выполнения контейнеров
+---
 
-**Сетевая инфраструктура:**
+## 3. Процесс развёртывания
 
-- **Flannel CNI** — обеспечивает единую сеть для всех подов (10.244.0.0/16) через VXLAN-туннели. Каждый под получает уникальный IP и может общаться с любым другим подом в кластере.
-- **CoreDNS** — внутренний DNS-сервер кластера. Поды находят друг друга по именам сервисов (например, `wordpress.default.svc.cluster.local`).
+##Схема: Процесс развёртывания
+![Процесс развёртывания](screenshots/Deployment_Flow.svg)
 
-**Как происходит деплой приложения:**
+1. **Шаблон ВМ:** Ubuntu 24.04 Cloud Image с Cloud-init и Guest Agent
+2. **6 ВМ:** 3 master + 3 worker, диски расширены до 20 GB
+3. **K8s:** kubeadm init, подключение узлов, Flannel CNI
+4. **WordPress:** Deployment, Service, Secret, ConfigMap, Ingress
+5. **Мониторинг:** Prometheus + Grafana через Helm
+6. **Бэкап:** MinIO + Velero + ручной бэкап
 
-1. Пользователь выполняет `kubectl apply -f deployment.yaml`
-2. API Server принимает запрос и сохраняет конфигурацию в etcd
-3. Scheduler находит подходящий worker-узел для новых подов
-4. Controller Manager создаёт ReplicaSet, который запускает поды
-5. kubelet на worker-узле получает команду и запускает контейнеры через containerd
-6. kube-proxy настраивает сетевые правила для доступа к подам через Service
+---
 
-### Отказоустойчивость
+## 4. WordPress + MariaDB
 
-- **Отказ worker-узла:** поды автоматически перезапускаются на других worker-узлах
-- **Отказ одного master-узла:** кластер продолжает работу (кворум etcd 2 из 3 сохранён)
-- **Отказ двух master-узлов:** кластер переходит в режим read-only (потеря кворума)
+**Манифесты:**
+- `00-namespace.yaml` — Namespace wordpress
+- `01-secret.yaml` — Secret wp-db-secret (доступ к БД)
+- `03-deployment.yaml` — Deployment WordPress (2 реплики)
+- `04-service.yaml` — Service ClusterIP
+- `05-ingress.yaml` — Ingress для внешнего доступа
+
+**MariaDB:** развёрнута в том же Namespace, доступ по внутреннему DNS `mariadb`.
+
+**Доступ:** http://192.168.0.131:30223
+
+---
+
+## 5. Мониторинг: Prometheus + Grafana
+
+Установлены через Helm chart `kube-prometheus-stack`.
+
+**Grafana:** http://IP:30542 (admin/admin)
+**Prometheus:** http://IP:30090
+
+Собирают метрики со всех узлов и подов кластера.
+
+---
+
+## 6. Бэкап: Velero + MinIO
+
+##Схема: Velero + MinIO
+![Velero + MinIO](screenshots/Backup_Architecture.svg)
+
+**MinIO** — S3-совместимое хранилище, развёрнуто в K8s. Хранит бэкапы Velero.
+
+**Velero** (v1.14.0) — инструмент для бэкапа и восстановления ресурсов Kubernetes. Сохраняет поды, сервисы, конфигурации в MinIO.
+
+**Ручной бэкап:** `kubectl get all --all-namespaces -o yaml` — альтернативный способ.
+
+---
+
+## 7. Пройденные трудности
+
+##Схема: Трудности
+![Трудности](screenshots/Challenges.svg)
+
+| Проблема | Решение |
+|----------|---------|
+| Диск 3.5GB — не хватает места для пакетов K8s | `qm resize 20G` + `resize2fs` |
+| `ip_forward` выключен | `sysctl -w net.ipv4.ip_forward=1` |
+| Одинаковый hostname `ubuntu-template` | `hostnamectl set-hostname` + сброс kubelet |
+| Flannel CrashLoop (br_netfilter) | `modprobe br_netfilter` |
+| MinIO: CPU не поддерживает x86-64-v2 | Использована старая версия из quay.io |
+| Velero не видит MinIO DNS | Ручной бэкап как альтернатива |
+
+---
+
+## 8. Проверка работы
+
+
+$ kubectl get nodes
+NAME          STATUS   ROLES           VERSION
+k8s-master1   Ready    control-plane   v1.30.14
+k8s-master2   Ready    control-plane   v1.30.14
+k8s-master3   Ready    control-plane   v1.30.14
+k8s-worker1   Ready    <none>          v1.30.14
+k8s-worker2   Ready    <none>          v1.30.14
+k8s-worker3   Ready    <none>          v1.30.14
+
+$ kubectl get pods -n wordpress
+NAME         READY   STATUS    RESTARTS   AGE
+mariadb-...  1/1     Running   0          XXm
+wordpress-... 1/1    Running   0          XXm
+wordpress-... 1/1    Running   0          XXm
+
+
+**WordPress:** http://192.168.0.131:30223/wp-admin/install.php
+**Grafana:** http://IP:30542
+**Prometheus:** http://IP:30090
+
+---
+
+## 9. Структура проекта
+
+
+k8s-project/
+├── README.md                   # Документация
+├── BORT_JOURNAL.md             # Бортовой журнал
+├── ansible/
+│   └── inventory.ini           # Inventory для Ansible
+├── k8s-manifests/
+│   ├── wordpress/              # Манифесты WordPress
+│   │   ├── 00-namespace.yaml
+│   │   ├── 01-secret.yaml
+│   │   ├── 02-configmap.yaml
+│   │   ├── 03-deployment.yaml
+│   │   ├── 04-service.yaml
+│   │   └── 05-ingress.yaml
+│   ├── monitoring/             # Мониторинг
+│   │   └── install.sh
+│   └── backup/                 # Бэкап
+│       ├── 01-minio.yaml
+│       └── 02-install-velero.sh
+├── k8s-backup/                 # Ручной бэкап
+├── screenshots/                # Схемы и скриншоты
+└── terraform/                  # Terraform для Proxmox
+
+
+### Инструкция по восстановлению
+
+```bash
+# 1. Проверка кластера
+ssh ubuntu@192.168.0.126 "kubectl get nodes"
+
+# 2. Применение манифестов
+kubectl apply -f k8s-manifests/wordpress/
+
+# 3. Установка мониторинга
+helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+  --namespace monitoring --create-namespace
+
+# 4. Ручной бэкап
+kubectl get all --all-namespaces -o yaml > k8s-backup/all-resources.yaml
+
+

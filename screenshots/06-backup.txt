@@ -1,0 +1,8 @@
+sk@skhome01:~/k8s-project$ ls -la k8s-backup/
+итого 1372
+drwxrwxr-x 2 sk sk   4096 июн 12 06:18 .
+drwxrwxr-x 7 sk sk   4096 июн 12 06:18 ..
+-rw-rw-r-- 1 sk sk 379607 июн 12 06:18 all-resources.yaml
+-rw-rw-r-- 1 sk sk 459212 июн 12 06:18 configmaps.yaml
+-rw-rw-r-- 1 sk sk    953 июн 12 06:18 ingress.yaml
+-rw-rw-r-- 1 sk sk 548114 июн 12 06:18 secrets.yaml

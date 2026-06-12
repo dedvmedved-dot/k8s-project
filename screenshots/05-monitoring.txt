@@ -1,0 +1,14 @@
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.126 kubectl get pods -n monitoring
+NAME                                                   READY   STATUS              RESTARTS   AGE
+monitoring-grafana-cf467847b-6nccw                     3/3     Running             0          52m
+monitoring-kube-prometheus-operator-7455dc68c9-s8jrp   0/1     ContainerCreating   0          52m
+monitoring-kube-state-metrics-99d68447-6gjrp           1/1     Running             0          52m
+monitoring-prometheus-node-exporter-76l65              0/1     ContainerCreating   0          52m
+monitoring-prometheus-node-exporter-fqmbf              1/1     Running             0          52m
+monitoring-prometheus-node-exporter-hqw4f              1/1     Running             0          52m
+monitoring-prometheus-node-exporter-k9s8h              1/1     Running             0          52m
+monitoring-prometheus-node-exporter-mj4td              1/1     Running             0          52m
+monitoring-prometheus-node-exporter-vnz8n              0/1     ContainerCreating   0          52m
+
+Grafana: http://IP:30542 (admin/admin)
+Prometheus: http://IP:30090

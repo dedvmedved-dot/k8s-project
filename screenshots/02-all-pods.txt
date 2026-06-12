@@ -1,0 +1,26 @@
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.126 kubectl get pods -A -o wide
+NAMESPACE       NAME                                                   READY   STATUS              RESTARTS   AGE   IP              NODE          NOMINATED NODE   READINESS GATES
+backup          minio-5b94fbc58c-bb8zt                                 0/1     Terminating         0          38m   <none>          k8s-worker1   <none>           <none>
+backup          minio-794575dbcd-j5st6                                 1/1     Running             0          12m   10.244.4.10     k8s-worker2   <none>           <none>
+backup          minio-86f7f469dd-k9zhm                                 0/1     Terminating         0          25m   <none>          k8s-worker1   <none>           <none>
+backup          minio-86f7f469dd-ltdxp                                 0/1     Terminating         0          31m   <none>          k8s-worker1   <none>           <none>
+ingress-nginx   ingress-nginx-admission-create-xbjsn                   0/1     Completed           0          76m   10.244.3.3      k8s-worker1   <none>           <none>
+ingress-nginx   ingress-nginx-admission-patch-w6jkj                    0/1     Completed           4          76m   10.244.5.2      k8s-worker3   <none>           <none>
+ingress-nginx   ingress-nginx-controller-7df66f8d-rvz98                1/1     Running             0          76m   10.244.5.5      k8s-worker3   <none>           <none>
+kube-flannel    kube-flannel-ds-bx8bk                                  1/1     Running             0          71m   192.168.0.130   k8s-worker2   <none>           <none>
+kube-flannel    kube-flannel-ds-k8mb7                                  1/1     Running             0          71m   192.168.0.128   k8s-master3   <none>           <none>
+kube-flannel    kube-flannel-ds-r29qc                                  1/1     Running             0          71m   192.168.0.129   k8s-worker1   <none>           <none>
+kube-flannel    kube-flannel-ds-rs7gj                                  1/1     Running             0          71m   192.168.0.131   k8s-worker3   <none>           <none>
+kube-flannel    kube-flannel-ds-rwvfd                                  1/1     Running             0          71m   192.168.0.127   k8s-master2   <none>           <none>
+kube-flannel    kube-flannel-ds-zbwb8                                  1/1     Running             0          71m   192.168.0.126   k8s-master1   <none>           <none>
+kube-system     coredns-55cb58b774-h28cp                               1/1     Running             0          95m   10.244.5.3      k8s-worker3   <none>           <none>
+kube-system     coredns-55cb58b774-nkg59                               1/1     Running             0          95m   10.244.4.2      k8s-worker2   <none>           <none>
+kube-system     etcd-k8s-master1                                       1/1     Running             0          95m   192.168.0.126   k8s-master1   <none>           <none>
+kube-system     etcd-k8s-master2                                       1/1     Running             0          91m   192.168.0.127   k8s-master2   <none>           <none>
+kube-system     etcd-k8s-master3                                       1/1     Running             0          91m   192.168.0.128   k8s-master3   <none>           <none>
+kube-system     kube-apiserver-k8s-master1                             1/1     Running             3          95m   192.168.0.126   k8s-master1   <none>           <none>
+kube-system     kube-apiserver-k8s-master2                             1/1     Running             6          91m   192.168.0.127   k8s-master2   <none>           <none>
+kube-system     kube-apiserver-k8s-master3                             1/1     Running             0          91m   192.168.0.128   k8s-master3   <none>           <none>
+kube-system     kube-controller-manager-k8s-master1                    1/1     Running             2          95m   192.168.0.126   k8s-master1   <none>           <none>
+kube-system     kube-controller-manager-k8s-master2                    1/1     Running             2          91m   192.168.0.127   k8s-master2   <none>           <none>
+kube-system     kube-controller-manager-k8s-master3                    1/1     Running             0          91m   192.168.0.128   k8s-master3   <none>           <none>

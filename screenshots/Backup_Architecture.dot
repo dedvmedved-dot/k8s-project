@@ -1,0 +1,27 @@
+digraph Backup_Architecture {
+    label="Архитектура бэкапа: Velero + MinIO";
+    labelloc=t; fontsize=20; fontname="Arial";
+    rankdir=TB; splines=ortho; nodesep=0.8; ranksep=0.6;
+    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
+    
+    admin [label="Администратор\nkubectl / velero", shape=oval, fillcolor="#E8F0FE", style=filled];
+    
+    velero [label="Velero\n(v1.14.0)\nБэкап и восстановление\nресурсов K8s", fillcolor="#FFF3E0", style=filled];
+    
+    subgraph cluster_k8s {
+        label="Kubernetes Cluster";
+        style=filled; fillcolor="#E6F4EA"; fontsize=12;
+        
+        api [label="API Server\nРесурсы кластера\nDeployments, Services,\nConfigMaps, Secrets", fillcolor="#C8E6C9", style=filled];
+    }
+    
+    minio [label="MinIO\n(S3-совместимое\nхранилище)\nБакет: velero", shape=cylinder, fillcolor="#FFE0B2", style=filled];
+    
+    manual [label="Ручной бэкап\nkubectl get all\n--all-namespaces\n-o yaml", fillcolor="#FCE8E6", style=filled];
+    
+    admin -> velero [label="backup create", color="#4285F4", penwidth=2];
+    velero -> api [label="сохраняет\nресурсы", color="#34A853", penwidth=2];
+    velero -> minio [label="сохраняет\nбэкап", color="#FB8C00", penwidth=2];
+    admin -> manual [label="альтернатива", style=dashed, color="#EA4335"];
+    manual -> api [label="сохраняет всё\nв YAML", style=dashed, color="#EA4335"];
+}

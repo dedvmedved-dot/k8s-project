@@ -1,0 +1,27 @@
+digraph Challenges {
+    label="Пройденные трудности при развёртывании K8s";
+    labelloc=t; fontsize=18; fontname="Arial";
+    rankdir=TB; splines=ortho; nodesep=0.7; ranksep=0.5;
+    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
+    
+    start [label="Начало", shape=oval, fillcolor="#E8F0FE", style=filled];
+    
+    p1 [label="Диск 3.5GB — мало\nдля K8s пакетов\nE: No space left", fillcolor="#FFCDD2", style=filled];
+    s1 [label="qm resize +20GB\ngrowpart + resize2fs", fillcolor="#C8E6C9", style=filled];
+    
+    p2 [label="ip_forward выключен\nkubeadm init\nпрерывается", fillcolor="#FFCDD2", style=filled];
+    s2 [label="sysctl -w\nnet.ipv4.ip_forward=1", fillcolor="#C8E6C9", style=filled];
+    
+    p3 [label="Одинаковый hostname\nна всех ВМ\nubuntu-template", fillcolor="#FFCDD2", style=filled];
+    s3 [label="hostnamectl set-hostname\nсброс kubelet", fillcolor="#C8E6C9", style=filled];
+    
+    p4 [label="Flannel CrashLoop\nbr_netfilter\nне загружен", fillcolor="#FFCDD2", style=filled];
+    s4 [label="modprobe br_netfilter\nв /etc/modules-load.d", fillcolor="#C8E6C9", style=filled];
+    
+    p5 [label="MinIO ImagePullBackOff\nCPU не поддерживает\nx86-64-v2", fillcolor="#FFCDD2", style=filled];
+    s5 [label="quay.io/minio/minio\nстарая версия\nсовместимая с CPU", fillcolor="#C8E6C9", style=filled];
+    
+    success [label="K8s + WordPress\nработают!", shape=oval, fillcolor="#A5D6A7", style=filled, penwidth=2];
+    
+    start -> p1 -> s1 -> p2 -> s2 -> p3 -> s3 -> p4 -> s4 -> p5 -> s5 -> success;
+}
