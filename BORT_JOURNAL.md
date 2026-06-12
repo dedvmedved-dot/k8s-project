@@ -63,3 +63,8 @@ ssh ubuntu@192.168.0.126 "kubeadm token create --print-join-command"
 - [x] Ingress Controller — Running, WordPress доступен
 - [x] Prometheus + Grafana — установлены
 - [x] Velero — установлен, MinIO скачивается
+
+### Бэкап
+- [x] Velero установлен (демонстрация)
+- [x] Ручной бэкап всех ресурсов K8s создан (`k8s-backup/`)
+- [x] MinIO работает
