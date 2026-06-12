@@ -51,3 +51,8 @@ ssh ubuntu@192.168.0.126 "kubeadm token create --print-join-command"
 - [x] WordPress переподключён к MariaDB
 - [x] Ingress работает: http://192.168.0.131:30223
 - [x] Страница установки WordPress открывается
+
+### Velero + MinIO
+- [x] MinIO установлен в K8s (backup namespace)
+- [x] Velero v1.14.0 установлен
+- [x] Первый бэкап WordPress создан
