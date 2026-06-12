@@ -1,0 +1,112 @@
+digraph K8s_Cluster {
+    rankdir=TB;
+    fontname="Arial";
+    fontsize=11;
+    bgcolor="white";
+    splines=ortho;
+    compound=true;
+    
+    node [fontname="Arial", fontsize=10, fontcolor="black", style=filled];
+    edge [fontname="Arial", fontsize=9, fontcolor="black"];
+    
+    labelloc="t";
+    label="Архитектура Kubernetes кластера (3 master + 3 worker)";
+    fontsize=16;
+    fontcolor="black";
+    
+    subgraph cluster_proxmox {
+        label="Proxmox VE 9.2 (192.168.0.200)";
+        fontsize=12;
+        style=filled;
+        fillcolor="#E8F0FE";
+        color="#4285F4";
+        penwidth=2;
+        
+        subgraph cluster_masters {
+            label="Control Plane (Master Nodes)";
+            fontsize=11;
+            style=filled;
+            fillcolor="#FFE0E0";
+            color="#CC0000";
+            penwidth=2;
+            
+            node [shape=box, style="filled,rounded", fillcolor="#FFFFFF", color="black", penwidth=1, width=2];
+            
+            master1 [label="k8s-master1\n192.168.0.126\netcd + API Server\nScheduler\nController Manager"];
+            master2 [label="k8s-master2\n192.168.0.127\netcd + API Server\nScheduler\nController Manager"];
+            master3 [label="k8s-master3\n192.168.0.128\netcd + API Server\nScheduler\nController Manager"];
+            
+            master1 -> master2 [label="etcd Raft\n(консенсус)", dir=both, color="#CC0000", penwidth=1.5];
+            master2 -> master3 [label="etcd Raft\n(консенсус)", dir=both, color="#CC0000", penwidth=1.5];
+            master3 -> master1 [label="etcd Raft\n(консенсус)", dir=both, color="#CC0000", penwidth=1.5];
+        }
+        
+        subgraph cluster_workers {
+            label="Worker Nodes";
+            fontsize=11;
+            style=filled;
+            fillcolor="#E0FFE0";
+            color="#00AA00";
+            penwidth=2;
+            
+            node [shape=box, style="filled,rounded", fillcolor="#FFFFFF", color="black", penwidth=1, width=1.8];
+            
+            worker1 [label="k8s-worker1\n192.168.0.129\nkubelet + kube-proxy\nContainer Runtime\n(containerd)"];
+            worker2 [label="k8s-worker2\n192.168.0.130\nkubelet + kube-proxy\nContainer Runtime\n(containerd)"];
+            worker3 [label="k8s-worker3\n192.168.0.131\nkubelet + kube-proxy\nContainer Runtime\n(containerd)"];
+        }
+    }
+    
+    subgraph cluster_network {
+        label="Сетевая инфраструктура";
+        fontsize=11;
+        style=filled;
+        fillcolor="#FFFFE0";
+        color="#AAAA00";
+        penwidth=2;
+        
+        node [shape=component, style=filled, fillcolor="#FFFFFF", color="black", penwidth=1, fontsize=9];
+        
+        flannel [label="Flannel CNI\nPod Network: 10.244.0.0/16\nVXLAN Overlay\nМежподовая связность"];
+        coredns [label="CoreDNS\nService Discovery\nDNS для подов"];
+    }
+    
+    subgraph cluster_addons {
+        label="Дополнительные компоненты";
+        fontsize=11;
+        style=filled;
+        fillcolor="#F0F0F0";
+        color="#666666";
+        penwidth=2;
+        
+        node [shape=box, style="filled,rounded", fillcolor="#FFFFFF", color="black", penwidth=1, fontsize=9];
+        
+        ingress [label="Ingress Controller\n(Nginx)\nВнешний доступ\nк сервисам"];
+        storage [label="Storage Class\n(local-path)\nPV/PVC для\nпостоянных данных"];
+    }
+    
+    // Связи master → worker
+    master1 -> worker1 [label="Управление\n(kubelet API)", color="#4285F4", penwidth=1.5];
+    master1 -> worker2 [color="#4285F4", penwidth=1.5];
+    master1 -> worker3 [color="#4285F4", penwidth=1.5];
+    
+    // Сеть
+    flannel -> worker1 [style=dashed, color="#00AA00"];
+    flannel -> worker2 [style=dashed, color="#00AA00"];
+    flannel -> worker3 [style=dashed, color="#00AA00"];
+    coredns -> flannel [style=dashed, color="black"];
+    
+    // Легенда портов
+    subgraph cluster_legend {
+        label="Порты";
+        fontsize=9;
+        style=filled;
+        fillcolor="#FAFAFA";
+        color="#999999";
+        penwidth=1;
+        
+        node [shape=note, style=filled, fillcolor="#FFFFFF", color="black", fontsize=8, width=1.5];
+        
+        ports [label="API Server: 6443\netcd: 2379-2380\nkubelet: 10250\nNodePort: 30000-32767\nFlannel VXLAN: 8472/UDP"];
+    }
+}
