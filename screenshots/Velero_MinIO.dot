@@ -1,0 +1,22 @@
+digraph Velero_MinIO {
+    label="Velero + MinIO — Архитектура бэкапа";
+    labelloc=t; fontsize=20; fontname="Arial";
+    rankdir=TB; splines=ortho; nodesep=0.8; ranksep=0.7;
+    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
+    
+    admin [label="Администратор\nvelero backup create", shape=oval, fillcolor="#E8F0FE"];
+    
+    velero [label="Velero Pod\n(в namespace velero)\nПодключается к K8s API\nСохраняет ресурсы\nв S3-совместимое\nхранилище", fillcolor="#FFF3E0"];
+    
+    api [label="K8s API Server\nРесурсы кластера:\nDeployments, Services,\nConfigMaps, Secrets,\nPersistentVolumes", fillcolor="#FCE8E6"];
+    
+    minio [label="MinIO Pod\n(в namespace backup)\nS3-совместимое\nобъектное хранилище\nBucket: velero\nПорт: 9000", shape=cylinder, fillcolor="#E6F4EA"];
+    
+    calico [label="Calico Network\nМежузловая\nIPIP-маршрутизация\n10.244.0.0/16", fillcolor="#F3E5F5"];
+    
+    admin -> velero [label="backup create\n--include-namespaces", color="#4285F4", penwidth=2];
+    velero -> api [label="сохраняет\nресурсы", color="#EA4335", penwidth=2];
+    velero -> minio [label="S3 API\n(через Calico)", color="#34A853", penwidth=2, style=dashed];
+    calico -> velero [style=dotted];
+    calico -> minio [style=dotted];
+}

@@ -1,13 +1,13 @@
-# Kubernetes Project — Деплой веб-проекта в K8s
+# Kubernetes Project — Деплой веб-проекта в K8s с бэкапами и мониторингом
 
 ## Содержание
 
 1. [Цель проекта](#1-цель-проекта)
 2. [Архитектура K8s кластера](#2-архитектура-k8s-кластера)
-3. [Процесс развёртывания](#3-процесс-развёртывания)
-4. [WordPress + MariaDB](#4-wordpress--mariadb)
-5. [Мониторинг: Prometheus + Grafana](#5-мониторинг-prometheus--grafana)
-6. [Бэкап: Velero + MinIO](#6-бэкап-velero--minio)
+3. [Calico CNI — межузловая маршрутизация](#3-calico-cni--межузловая-маршрутизация)
+4. [CoreDNS — Service Discovery](#4-coredns--service-discovery)
+5. [Velero + MinIO — бэкап и восстановление](#5-velero--minio--бэкап-и-восстановление)
+6. [WordPress + MariaDB](#6-wordpress--mariadb)
 7. [Пройденные трудности](#7-пройденные-трудности)
 8. [Проверка работы](#8-проверка-работы)
 9. [Структура проекта](#9-структура-проекта)
@@ -16,13 +16,16 @@
 
 ## 1. Цель проекта
 
-Развернуть отказоустойчивый кластер Kubernetes, задеплоить веб-портал WordPress с базой данных, настроить мониторинг и бэкап.
+Развернуть отказоустойчивый кластер Kubernetes, задеплоить веб-портал WordPress с базой данных, настроить бэкапы через Velero + MinIO и мониторинг через Prometheus + Grafana.
 
-**Требования ДЗ:**
-- ✅ K8s кластер (kubeadm)
-- ✅ Веб-портал в YAML-манифестах
-- ✅ ConfigMap, Secret, Ingress
-- ✅ Бэкап конфигурации кластера
+**Выполненные требования:**
+- ✅ K8s кластер (3 master + 3 worker)
+- ✅ Calico CNI (межузловая маршрутизация)
+- ✅ CoreDNS (Service Discovery)
+- ✅ Velero + MinIO (бэкапы Completed)
+- ✅ WordPress + MariaDB
+- ✅ Prometheus + Grafana (установлены)
+- ✅ Хранилище Proxmox: ZFS mirror для ВМ
 
 ---
 
@@ -31,93 +34,119 @@
 ##Схема: Архитектура K8s кластера
 ![Архитектура K8s](screenshots/K8s_Architecture.svg)
 
-Кластер состоит из 6 узлов:
+Кластер состоит из 6 узлов на Proxmox VE 9.2:
 
 | Узел | IP | Роль | Ресурсы |
 |------|-----|------|---------|
-| k8s-master1 | 192.168.0.126 | Control Plane | 2 CPU, 4 GB, 20 GB |
-| k8s-master2 | 192.168.0.127 | Control Plane | 2 CPU, 4 GB, 20 GB |
-| k8s-master3 | 192.168.0.128 | Control Plane | 2 CPU, 4 GB, 20 GB |
-| k8s-worker1 | 192.168.0.129 | Worker | 2 CPU, 4 GB, 20 GB |
-| k8s-worker2 | 192.168.0.130 | Worker | 2 CPU, 4 GB, 20 GB |
-| k8s-worker3 | 192.168.0.131 | Worker | 2 CPU, 4 GB, 20 GB |
+| k8s-master1 | 192.168.0.132 | Control Plane | 2 CPU, 4 GB, 20 GB |
+| k8s-master2 | 192.168.0.133 | Control Plane | 2 CPU, 4 GB, 20 GB |
+| k8s-master3 | 192.168.0.134 | Control Plane | 2 CPU, 4 GB, 20 GB |
+| k8s-worker | 192.168.0.137 | Worker | 2 CPU, 4 GB, 20 GB |
+| k8s-worker2 | 192.168.0.135 | Worker | 2 CPU, 4 GB, 20 GB |
+| k8s-worker3 | 192.168.0.136 | Worker | 2 CPU, 4 GB, 20 GB |
 
-### Как работает K8s
-
-**Control Plane** управляет кластером через etcd (распределённое хранилище конфигурации на основе Raft). API Server принимает запросы, Scheduler распределяет поды, Controller Manager поддерживает желаемое состояние.
-
-**Worker Nodes** исполняют контейнеры через containerd. kubelet управляет подами, kube-proxy настраивает сетевые правила.
-
-**Flannel CNI** обеспечивает сеть подов (10.244.0.0/16) через VXLAN-туннели.
+**Хранилище Proxmox:**
+- `rpool` (ZFS) — системный диск 2TB (nvme0n1)
+- `vm-pool` (ZFS Mirror) — зеркало из двух 1TB дисков (nvme1n1 + nvme2n1) для ВМ
 
 ---
 
-## 3. Процесс развёртывания
+## 3. Calico CNI — межузловая маршрутизация
 
-##Схема: Процесс развёртывания
-![Процесс развёртывания](screenshots/Deployment_Flow.svg)
+##Схема: Calico CNI
+![Calico CNI](screenshots/Calico_CNI.svg)
 
-1. **Шаблон ВМ:** Ubuntu 24.04 Cloud Image с Cloud-init и Guest Agent
-2. **6 ВМ:** 3 master + 3 worker, диски расширены до 20 GB
-3. **K8s:** kubeadm init, подключение узлов, Flannel CNI
-4. **WordPress:** Deployment, Service, Secret, ConfigMap, Ingress
-5. **Мониторинг:** Prometheus + Grafana через Helm
-6. **Бэкап:** MinIO + Velero + ручной бэкап
+**Calico** обеспечивает сетевую связность между подами на разных узлах через **IP-in-IP туннели** (`ipipMode: Always`).
 
----
+**Как это работает:**
+1. Пакет от пода A (10.244.x.x) выходит через `cni0` (бридж)
+2. Попадает на `tunl0` (IPIP-туннельный интерфейс)
+3. Инкапсулируется в IP-пакет с адресом узла назначения
+4. Передаётся через физическую сеть (192.168.0.0/24)
+5. На узле назначения декапсулируется и доставляется поду B
 
-## 4. WordPress + MariaDB
-
-**Манифесты:**
-- `00-namespace.yaml` — Namespace wordpress
-- `01-secret.yaml` — Secret wp-db-secret (доступ к БД)
-- `03-deployment.yaml` — Deployment WordPress (2 реплики)
-- `04-service.yaml` — Service ClusterIP
-- `05-ingress.yaml` — Ingress для внешнего доступа
-
-**MariaDB:** развёрнута в том же Namespace, доступ по внутреннему DNS `mariadb`.
-
-**Доступ:** http://192.168.0.131:30223
+**Почему Calico, а не Flannel:**
+- Flannel VXLAN не работал в нашей среде (проблемы с FDB-таблицами)
+- Flannel host-gw требовал очистки cni0 при каждом перезапуске
+- Calico использует BGP-маршрутизацию — более надёжный и производительный
 
 ---
 
-## 5. Мониторинг: Prometheus + Grafana
+## 4. CoreDNS — Service Discovery
 
-Установлены через Helm chart `kube-prometheus-stack`.
+##Схема: CoreDNS
+![CoreDNS](screenshots/CoreDNS.svg)
 
-**Grafana:** http://IP:30542 (admin/admin)
-**Prometheus:** http://IP:30090
+**CoreDNS** — внутренний DNS-сервер Kubernetes. Поды используют его для разрешения имён сервисов.
 
-Собирают метрики со всех узлов и подов кластера.
+**Как это работает:**
+1. Под отправляет DNS-запрос (например, `kubernetes.default.svc`)
+2. `/etc/resolv.conf` направляет запрос на `10.96.0.10:53` (ClusterIP CoreDNS)
+3. `kube-proxy` через iptables перенаправляет трафик на один из CoreDNS подов
+4. CoreDNS через плагин `kubernetes` запрашивает Service-записи у API Server
+5. Возвращает IP сервиса (например, `10.96.0.1`)
+
+**Особенность:** Утилита `nslookup` в Alpine-образах не использует `search`-домены из `/etc/resolv.conf`, поэтому возвращает `NXDOMAIN`. Но **системный резолвер (glibc getaddrinfo)** работает корректно — `curl` успешно подключается к сервисам по именам.
 
 ---
 
-## 6. Бэкап: Velero + MinIO
+## 5. Velero + MinIO — бэкап и восстановление
 
 ##Схема: Velero + MinIO
-![Velero + MinIO](screenshots/Backup_Architecture.svg)
+![Velero + MinIO](screenshots/Velero_MinIO.svg)
 
-**MinIO** — S3-совместимое хранилище, развёрнуто в K8s. Хранит бэкапы Velero.
+**Velero** — инструмент для бэкапа и восстановления ресурсов Kubernetes. Сохраняет поды, сервисы, конфигурации в S3-совместимое хранилище.
 
-**Velero** (v1.14.0) — инструмент для бэкапа и восстановления ресурсов Kubernetes. Сохраняет поды, сервисы, конфигурации в MinIO.
+**MinIO** — S3-совместимое объектное хранилище, развёрнутое внутри кластера.
 
-**Ручной бэкап:** `kubectl get all --all-namespaces -o yaml` — альтернативный способ.
+**Как это работает:**
+1. Администратор выполняет `velero backup create --include-namespaces wordpress`
+2. Velero подключается к K8s API Server и собирает все ресурсы
+3. Сохраняет их в MinIO через S3 API
+4. Бэкап доступен для восстановления: `velero restore create --from-backup wp-final-v2`
+
+**Установка:**
+```bash
+# 1. MinIO
+kubectl apply -f minio.yaml
+
+# 2. Velero (после готовности MinIO!)
+velero install \
+  --provider aws \
+  --plugins velero/velero-plugin-for-aws:v1.10.0 \
+  --bucket velero \
+  --secret-file credentials \
+  --backup-location-config s3Url=http://minio.backup.svc:9000
+
+
+**Важно:** Velero устанавливается **после** MinIO, когда Service DNS уже работает.
+
+---
+
+## 6. WordPress + MariaDB
+
+WordPress развёрнут в namespace `wordpress`:
+- **MariaDB** — 1 реплика, внутренний сервис `mariadb:3306`
+- **WordPress** — 2 реплики, доступ через Ingress Controller
+
+**Доступ:** `http://192.168.0.137:30223` (NodePort Ingress)
 
 ---
 
 ## 7. Пройденные трудности
 
-##Схема: Трудности
+##Схема: Трудности и решения
 ![Трудности](screenshots/Challenges.svg)
 
-| Проблема | Решение |
-|----------|---------|
-| Диск 3.5GB — не хватает места для пакетов K8s | `qm resize 20G` + `resize2fs` |
-| `ip_forward` выключен | `sysctl -w net.ipv4.ip_forward=1` |
-| Одинаковый hostname `ubuntu-template` | `hostnamectl set-hostname` + сброс kubelet |
-| Flannel CrashLoop (br_netfilter) | `modprobe br_netfilter` |
-| MinIO: CPU не поддерживает x86-64-v2 | Использована старая версия из quay.io |
-| Velero не видит MinIO DNS | Ручной бэкап как альтернатива |
+| Проблема | Причина | Решение |
+|----------|---------|---------|
+| Flannel VXLAN не работает | FDB-таблица не заполняется | Перешли на Calico |
+| Flannel host-gw ломает cni0 | Конфликт IP при перезапуске | Calico IPIP-туннели |
+| CoreDNS NXDOMAIN в nslookup | Alpine-образ не использует search-домены | Системный резолвер работает |
+| Velero no route to host | Старые IP от Flannel | Пересоздание подов после смены CNI |
+| MinIO теряет данные | emptyDir | Создание bucket через mkdir |
+| Proxmox EFI не видит диск | Повреждённая GPT | sgdisk -Z + переустановка |
+| etcd too many learners | Одновременное подключение master-узлов | Подключение по одному с паузой 40 сек |
 
 ---
 
@@ -129,9 +158,13 @@ NAME          STATUS   ROLES           VERSION
 k8s-master1   Ready    control-plane   v1.30.14
 k8s-master2   Ready    control-plane   v1.30.14
 k8s-master3   Ready    control-plane   v1.30.14
-k8s-worker1   Ready    <none>          v1.30.14
+k8s-worker    Ready    <none>          v1.30.14
 k8s-worker2   Ready    <none>          v1.30.14
 k8s-worker3   Ready    <none>          v1.30.14
+
+$ velero backup get
+NAME            STATUS      CREATED                         EXPIRES
+wp-final-v2     Completed   2026-06-13 14:21:48 +0000 UTC   29d
 
 $ kubectl get pods -n wordpress
 NAME         READY   STATUS    RESTARTS   AGE
@@ -139,10 +172,6 @@ mariadb-...  1/1     Running   0          XXm
 wordpress-... 1/1    Running   0          XXm
 wordpress-... 1/1    Running   0          XXm
 
-
-**WordPress:** http://192.168.0.131:30223/wp-admin/install.php
-**Grafana:** http://IP:30542
-**Prometheus:** http://IP:30090
 
 ---
 
@@ -156,36 +185,25 @@ k8s-project/
 │   └── inventory.ini           # Inventory для Ansible
 ├── k8s-manifests/
 │   ├── wordpress/              # Манифесты WordPress
-│   │   ├── 00-namespace.yaml
-│   │   ├── 01-secret.yaml
-│   │   ├── 02-configmap.yaml
-│   │   ├── 03-deployment.yaml
-│   │   ├── 04-service.yaml
-│   │   └── 05-ingress.yaml
-│   ├── monitoring/             # Мониторинг
-│   │   └── install.sh
-│   └── backup/                 # Бэкап
-│       ├── 01-minio.yaml
-│       └── 02-install-velero.sh
-├── k8s-backup/                 # Ручной бэкап
+│   ├── monitoring/             # Prometheus + Grafana
+│   └── backup/                 # MinIO + Velero
 ├── screenshots/                # Схемы и скриншоты
 └── terraform/                  # Terraform для Proxmox
-
+```
 
 ### Инструкция по восстановлению
 
 ```bash
 # 1. Проверка кластера
-ssh ubuntu@192.168.0.126 "kubectl get nodes"
+ssh ubuntu@192.168.0.132 "kubectl get nodes"
 
-# 2. Применение манифестов
-kubectl apply -f k8s-manifests/wordpress/
+# 2. Бэкап WordPress
+velero backup create wp-backup --include-namespaces wordpress --wait
 
-# 3. Установка мониторинга
-helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
-  --namespace monitoring --create-namespace
+# 3. Восстановление из бэкапа
+velero restore create --from-backup wp-backup
 
-# 4. Ручной бэкап
+# 4. Ручной бэкап (альтернатива)
 kubectl get all --all-namespaces -o yaml > k8s-backup/all-resources.yaml
-
+```
 

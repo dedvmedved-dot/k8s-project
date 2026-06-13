@@ -1,0 +1,33 @@
+digraph Calico_CNI {
+    label="Calico CNI — Межузловая маршрутизация";
+    labelloc=t; fontsize=20; fontname="Arial";
+    rankdir=TB; splines=ortho; nodesep=0.8; ranksep=0.7;
+    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
+    
+    subgraph cluster_node1 {
+        label="k8s-worker2 (192.168.0.135)";
+        style=filled; fillcolor="#E8F0FE"; fontsize=12;
+        pod_a [label="Velero Pod\n10.244.126.5\ncaliXXXX", fillcolor="#BBDEFB"];
+        cni0_a [label="cni0 (bridge)\n10.244.4.1", fillcolor="#BBDEFB"];
+        tunl0_a [label="tunl0 (IPIP)\nТуннельный интерфейс", fillcolor="#BBDEFB"];
+        pod_a -> cni0_a -> tunl0_a;
+    }
+    
+    subgraph cluster_network {
+        label="Физическая сеть 192.168.0.0/24";
+        style=filled; fillcolor="#FFF3E0"; fontsize=12;
+        eth [label="Ethernet\nBGP-маршруты\nIPIP-туннели", fillcolor="#FFE0B2"];
+    }
+    
+    subgraph cluster_node2 {
+        label="k8s-worker3 (192.168.0.136)";
+        style=filled; fillcolor="#E8F0FE"; fontsize=12;
+        tunl0_b [label="tunl0 (IPIP)\nТуннельный интерфейс", fillcolor="#BBDEFB"];
+        cni0_b [label="cni0 (bridge)\n10.244.5.1", fillcolor="#BBDEFB"];
+        pod_b [label="MinIO Pod\n10.244.100.195\ncaliYYYY", fillcolor="#BBDEFB"];
+        tunl0_b -> cni0_b -> pod_b;
+    }
+    
+    tunl0_a -> eth [label="IPIP-туннель\n(инкапсуляция)", color="#FB8C00", penwidth=2];
+    eth -> tunl0_b [label="IPIP-туннель\n(декапсуляция)", color="#FB8C00", penwidth=2];
+}

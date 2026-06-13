@@ -1,0 +1,2 @@
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.132 kubectl exec -n kube-system curl-test -- curl -k https://kubernetes.default.svc/healthz
+ok

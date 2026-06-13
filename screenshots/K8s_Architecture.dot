@@ -1,5 +1,5 @@
 digraph K8s_Architecture {
-    label="Архитектура Kubernetes кластера";
+    label="Архитектура Kubernetes кластера на Proxmox";
     labelloc=t; fontsize=20; fontname="Arial";
     rankdir=TB; splines=ortho; nodesep=0.8; ranksep=0.7;
     node [shape=box, style=rounded, fontname="Arial", fontsize=10];
@@ -11,11 +11,9 @@ digraph K8s_Architecture {
         subgraph cluster_masters {
             label="Control Plane (3 узла)";
             style=filled; fillcolor="#FFE0E0"; color="#CC0000"; fontsize=12;
-            
-            m1 [label="k8s-master1\n.126\nAPI Server\netcd\nScheduler\nController Mgr", fillcolor="#FFCDD2", style=filled];
-            m2 [label="k8s-master2\n.127\nAPI Server\netcd\nScheduler\nController Mgr", fillcolor="#FFCDD2", style=filled];
-            m3 [label="k8s-master3\n.128\nAPI Server\netcd\nScheduler\nController Mgr", fillcolor="#FFCDD2", style=filled];
-            
+            m1 [label="k8s-master1\n.132\nAPI Server\netcd\nScheduler", fillcolor="#FFCDD2"];
+            m2 [label="k8s-master2\n.133\nAPI Server\netcd\nScheduler", fillcolor="#FFCDD2"];
+            m3 [label="k8s-master3\n.134\nAPI Server\netcd\nScheduler", fillcolor="#FFCDD2"];
             m1 -> m2 [label="etcd Raft", dir=both, color="#CC0000", penwidth=2];
             m2 -> m3 [label="etcd Raft", dir=both, color="#CC0000", penwidth=2];
         }
@@ -23,29 +21,32 @@ digraph K8s_Architecture {
         subgraph cluster_workers {
             label="Worker Nodes (3 узла)";
             style=filled; fillcolor="#E0FFE0"; color="#00AA00"; fontsize=12;
-            
-            w1 [label="k8s-worker1\n.129\ncontainerd\nkubelet\nkube-proxy", fillcolor="#C8E6C9", style=filled];
-            w2 [label="k8s-worker2\n.130\ncontainerd\nkubelet\nkube-proxy", fillcolor="#C8E6C9", style=filled];
-            w3 [label="k8s-worker3\n.131\ncontainerd\nkubelet\nkube-proxy", fillcolor="#C8E6C9", style=filled];
+            w1 [label="k8s-worker\n.137\ncontainerd\nkubelet", fillcolor="#C8E6C9"];
+            w2 [label="k8s-worker2\n.135\ncontainerd\nkubelet", fillcolor="#C8E6C9"];
+            w3 [label="k8s-worker3\n.136\ncontainerd\nkubelet", fillcolor="#C8E6C9"];
         }
     }
     
-    subgraph cluster_services {
-        label="Развёрнутые сервисы";
-        style=filled; fillcolor="#FFF3E0"; color="#FB8C00"; fontsize=13;
-        
-        wp [label="WordPress\n2 реплики\n+ MariaDB", fillcolor="#FFE0B2", style=filled];
-        ingress [label="Nginx Ingress\nController\n:30223", fillcolor="#FFE0B2", style=filled];
-        monitor [label="Prometheus\n+ Grafana\n:30542/:30090", fillcolor="#FFE0B2", style=filled];
-        backup [label="Velero\n+ MinIO\nБэкап", fillcolor="#FFE0B2", style=filled];
+    subgraph cluster_network {
+        label="Сетевая инфраструктура";
+        style=filled; fillcolor="#FFF3E0"; color="#FB8C00"; fontsize=12;
+        calico [label="Calico CNI\nIP-in-IP туннели\nПодсеть: 10.244.0.0/16\nМежузловая маршрутизация", fillcolor="#FFE0B2"];
+        coredns [label="CoreDNS\nService Discovery\n10.96.0.10:53", fillcolor="#FFE0B2"];
+    }
+    
+    subgraph cluster_storage {
+        label="Хранилище Proxmox";
+        style=filled; fillcolor="#F3E5F5"; color="#9C27B0"; fontsize=12;
+        rpool [label="rpool (ZFS)\nnvme0n1 2TB\nСистема Proxmox", fillcolor="#E1BEE7"];
+        vmpool [label="vm-pool (ZFS Mirror)\nnvme1n1 + nvme2n1\n1TB + 1TB = RAID1\nДиски ВМ", fillcolor="#E1BEE7"];
     }
     
     m1 -> w1 [color="#4285F4", penwidth=1.5];
     m1 -> w2 [color="#4285F4", penwidth=1.5];
     m1 -> w3 [color="#4285F4", penwidth=1.5];
-    
-    w1 -> wp [label="поды", color="#34A853"];
-    w2 -> wp [label="поды", color="#34A853"];
-    w3 -> monitor [label="поды", color="#34A853"];
-    w1 -> backup [color="#34A853"];
+    calico -> w1; calico -> w2; calico -> w3;
+    calico -> m1; calico -> m2; calico -> m3;
+    coredns -> calico;
+    vmpool -> m1 [style=dashed]; vmpool -> w1 [style=dashed];
+    rpool -> m1 [style=dotted, color="#9C27B0"];
 }

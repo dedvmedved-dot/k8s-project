@@ -1,0 +1,8 @@
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.132 kubectl get pods,svc -n backup
+NAME                        READY   STATUS    RESTARTS         AGE
+pod/minio-8f48c6f6b-pqk5j   1/1     Running   0                67m
+pod/net-test                1/1     Running   12 (9m42s ago)   130m
+pod/test-dns                1/1     Running   15 (3m11s ago)   153m
+
+NAME            TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE
+service/minio   ClusterIP   10.104.2.59   <none>        9000/TCP   3h1m

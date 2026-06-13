@@ -4,24 +4,24 @@ digraph Challenges {
     rankdir=TB; splines=ortho; nodesep=0.7; ranksep=0.5;
     node [shape=box, style=rounded, fontname="Arial", fontsize=10];
     
-    start [label="Начало", shape=oval, fillcolor="#E8F0FE", style=filled];
+    start [label="Начало", shape=oval, fillcolor="#E8F0FE"];
     
-    p1 [label="Диск 3.5GB — мало\nдля K8s пакетов\nE: No space left", fillcolor="#FFCDD2", style=filled];
-    s1 [label="qm resize +20GB\ngrowpart + resize2fs", fillcolor="#C8E6C9", style=filled];
+    p1 [label="Flannel VXLAN\nне работает\nмежузловая связь", fillcolor="#FFCDD2"];
+    s1 [label="Перешли на Calico\nIPIP-туннели\n(BGP-маршрутизация)", fillcolor="#C8E6C9"];
     
-    p2 [label="ip_forward выключен\nkubeadm init\nпрерывается", fillcolor="#FFCDD2", style=filled];
-    s2 [label="sysctl -w\nnet.ipv4.ip_forward=1", fillcolor="#C8E6C9", style=filled];
+    p2 [label="CoreDNS NXDOMAIN\nnslookup не работает\n(Alpine-образ)", fillcolor="#FFCDD2"];
+    s2 [label="Системный резолвер (glibc)\nработает через search-домены\ncurl успешно резолвит", fillcolor="#C8E6C9"];
     
-    p3 [label="Одинаковый hostname\nна всех ВМ\nubuntu-template", fillcolor="#FFCDD2", style=filled];
-    s3 [label="hostnamectl set-hostname\nсброс kubelet", fillcolor="#C8E6C9", style=filled];
+    p3 [label="Velero + MinIO\nno route to host\n(разные узлы)", fillcolor="#FFCDD2"];
+    s3 [label="Calico требует\nпересоздания подов\nпосле смены CNI\n(новые IP из правильной подсети)", fillcolor="#C8E6C9"];
     
-    p4 [label="Flannel CrashLoop\nbr_netfilter\nне загружен", fillcolor="#FFCDD2", style=filled];
-    s4 [label="modprobe br_netfilter\nв /etc/modules-load.d", fillcolor="#C8E6C9", style=filled];
+    p4 [label="MinIO теряет данные\nпри пересоздании\n(emptyDir)", fillcolor="#FFCDD2"];
+    s4 [label="Создали bucket\nчерез mkdir вручную\n(для production — PVC)", fillcolor="#C8E6C9"];
     
-    p5 [label="MinIO ImagePullBackOff\nCPU не поддерживает\nx86-64-v2", fillcolor="#FFCDD2", style=filled];
-    s5 [label="quay.io/minio/minio\nстарая версия\nсовместимая с CPU", fillcolor="#C8E6C9", style=filled];
+    p5 [label="Proxmox установка\nна ZFS — EFI\nне видит диск", fillcolor="#FFCDD2"];
+    s5 [label="Очистили диск\nчерез sgdisk -Z\nпереустановили\nProxmox заново", fillcolor="#C8E6C9"];
     
-    success [label="K8s + WordPress\nработают!", shape=oval, fillcolor="#A5D6A7", style=filled, penwidth=2];
+    success [label="K8s + Calico + DNS +\nVelero + MinIO\nработают!", shape=oval, fillcolor="#A5D6A7", penwidth=2];
     
     start -> p1 -> s1 -> p2 -> s2 -> p3 -> s3 -> p4 -> s4 -> p5 -> s5 -> success;
 }

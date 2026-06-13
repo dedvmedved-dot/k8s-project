@@ -1,12 +1,9 @@
-sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.126 kubectl get pods,svc,ingress -n wordpress
-NAME                            READY   STATUS    RESTARTS   AGE
-pod/mariadb-5d5c74df88-rfs2g    1/1     Running   0          58m
-pod/wordpress-b68d45994-859v2   1/1     Running   0          58m
-pod/wordpress-b68d45994-l2grj   1/1     Running   0          58m
+sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.132 kubectl get pods,svc -n wordpress
+NAME                             READY   STATUS    RESTARTS   AGE
+pod/mariadb-5d5c74df88-ftmvx     1/1     Running   0          3h38m
+pod/wordpress-6f66c68ddd-gkxm9   1/1     Running   0          3h38m
+pod/wordpress-6f66c68ddd-tj86m   1/1     Running   0          3h38m
 
 NAME                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
-service/mariadb     ClusterIP   10.102.54.60    <none>        3306/TCP   58m
-service/wordpress   ClusterIP   10.104.62.250   <none>        80/TCP     82m
-
-NAME                                  CLASS   HOSTS   ADDRESS   PORTS   AGE
-ingress.networking.k8s.io/wordpress   nginx   *                 80      60m
+service/mariadb     ClusterIP   10.106.61.155   <none>        3306/TCP   4h20m
+service/wordpress   ClusterIP   10.110.31.174   <none>        80/TCP     4h20m

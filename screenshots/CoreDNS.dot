@@ -1,0 +1,24 @@
+digraph CoreDNS {
+    label="CoreDNS — Service Discovery в K8s";
+    labelloc=t; fontsize=20; fontname="Arial";
+    rankdir=TB; splines=ortho; nodesep=0.8; ranksep=0.7;
+    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
+    
+    pod [label="Pod (любой)\n/etc/resolv.conf\nnameserver 10.96.0.10\nsearch svc.cluster.local", fillcolor="#E8F0FE"];
+    
+    kube_proxy [label="kube-proxy (iptables)\nПравила DNAT\n10.96.0.10:53 → PodIP:53", fillcolor="#FFF3E0"];
+    
+    coredns_pod1 [label="CoreDNS Pod 1\n10.244.4.105\nПлагин: kubernetes\nЗапрашивает Service\nзаписи у API Server", fillcolor="#E6F4EA"];
+    coredns_pod2 [label="CoreDNS Pod 2\n10.244.3.170\nПлагин: kubernetes\nЗапрашивает Service\nзаписи у API Server", fillcolor="#E6F4EA"];
+    
+    api [label="API Server\n10.96.0.1:443\nХранит все\nService-записи", fillcolor="#FCE8E6"];
+    
+    pod -> kube_proxy [label="DNS-запрос\nkubernetes.default.svc", color="#4285F4", penwidth=2];
+    kube_proxy -> coredns_pod1 [color="#34A853"];
+    kube_proxy -> coredns_pod2 [color="#34A853"];
+    coredns_pod1 -> api [label="watch Services", color="#EA4335", penwidth=2];
+    coredns_pod2 -> api [label="watch Services", color="#EA4335", penwidth=2];
+    api -> coredns_pod1 [label="Service IPs", color="#EA4335", style=dashed];
+    api -> coredns_pod2 [label="Service IPs", color="#EA4335", style=dashed];
+    coredns_pod1 -> pod [label="10.96.0.1", color="#34A853", penwidth=2, style=dashed];
+}
