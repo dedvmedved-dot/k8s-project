@@ -1,47 +1,15 @@
 digraph Deployment_Process {
-    label="Процесс развертывания проекта\n4 этапа";
-    labelloc=t; fontsize=18; fontname="Arial";
+    label="Deployment Process"; labelloc=t; fontsize=18;
     rankdir=TB; splines=ortho;
-    nodesep=0.3; ranksep=0.5;
-    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
-    edge [fontname="Arial", fontsize=9];
+    node [shape=box, style=rounded, fontsize=10];
     
-    subgraph stage1 {
-        label="Этап 1: Подготовка Proxmox";
-        style=filled; fillcolor="#FFE8E8";
-        s1a [label="Установка Proxmox VE 9.2"];
-        s1b [label="ZFS mirror\nvm-pool 2×1TB"];
-        s1c [label="Шаблон Ubuntu 24.04\nCloud-init + Guest Agent"];
-        s1a -> s1b -> s1c;
-    }
-    
-    subgraph stage2 {
-        label="Этап 2: Развертывание ВМ";
-        style=filled; fillcolor="#FFE8CC";
-        s2a [label="Клонирование 6 ВМ"];
-        s2b [label="Статические IP\n192.168.0.132-137"];
-        s2c [label="ContainerD\nKubeadm, Kubelet"];
-        s2a -> s2b -> s2c;
-    }
-    
-    subgraph stage3 {
-        label="Этап 3: Кластер K8s";
-        style=filled; fillcolor="#FFFFCC";
-        s3a [label="kubeadm init\n--node-name\n--pod-network-cidr"];
-        s3b [label="Join Master2,3\nпауза 40 сек\netcd синхронизация"];
-        s3c [label="Join Workers\nkubeadm join"];
-        s3a -> s3b -> s3c;
-    }
-    
-    subgraph stage4 {
-        label="Этап 4: Сервисы";
-        style=filled; fillcolor="#CCFFCC";
-        s4a [label="Calico CNI\nIP-in-IP туннели"];
-        s4b [label="WordPress\n+ MariaDB"];
-        s4c [label="Velero + MinIO\n+ NFS бэкап"];
-        s4d [label="Prometheus\n+ Grafana"];
-        s4a -> s4b -> s4c -> s4d;
-    }
-    
-    stage1 -> stage2 -> stage3 -> stage4;
+    subgraph s1 { label="Stage 1: Proxmox"; style=filled; fillcolor="#FFE8E8";
+        a[label="Install VE 9.2"]; b[label="ZFS mirror"]; c[label="Ubuntu template"]; a->b->c; }
+    subgraph s2 { label="Stage 2: VMs"; style=filled; fillcolor="#FFE8CC";
+        d[label="Clone 6 VMs"]; e[label="Static IPs"]; f[label="ContainerD"]; d->e->f; }
+    subgraph s3 { label="Stage 3: K8s"; style=filled; fillcolor="#FFFFCC";
+        g[label="kubeadm init"]; h[label="Join masters"]; i[label="Join workers"]; g->h->i; }
+    subgraph s4 { label="Stage 4: Services"; style=filled; fillcolor="#CCFFCC";
+        j[label="Calico CNI"]; k[label="WordPress"]; l[label="Velero+MinIO"]; m[label="Prometheus"]; j->k->l->m; }
+    s1->s2->s3->s4;
 }

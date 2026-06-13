@@ -1,0 +1,19 @@
+digraph DataFlow {
+    rankdir=TB; splines=ortho;
+    node [style=filled, fontsize=10];
+    labelloc="t"; label="Data Flows"; fontsize=14;
+    
+    user [label="User", shape=oval, fillcolor="#BBDEFB"];
+    ingress [label="Ingress :80", shape=box, fillcolor="#FFFFFF"];
+    wp [label="WordPress", shape=box, fillcolor="#FFFFFF"];
+    pg [label="PostgreSQL", shape=cylinder, fillcolor="#FFFFFF"];
+    kafka [label="Kafka", shape=box, fillcolor="#FFFFFF"];
+    prom [label="Prometheus", shape=box, fillcolor="#FFFFFF"];
+    grafana [label="Grafana", shape=box, fillcolor="#FFFFFF"];
+    
+    user -> ingress -> wp [penwidth=2];
+    wp -> pg [label="SQL", penwidth=2];
+    wp -> kafka [label="Logs", style=dashed];
+    wp -> prom [label="Metrics", style=dashed];
+    kafka -> grafana; prom -> grafana [penwidth=2];
+}

@@ -1,0 +1,17 @@
+digraph ProjectToAIOps {
+    rankdir=LR; splines=ortho;
+    node [style=filled, fontsize=10];
+    labelloc="t"; label="Project -> AIOps Evolution"; fontsize=14;
+    
+    subgraph cluster_now { label="Project (NOW)"; fillcolor="#FFF3E0";
+        logs [label="Kafka+ClickHouse", shape=box, fillcolor="#FFFFFF"];
+        metrics [label="Prometheus", shape=box, fillcolor="#FFFFFF"];
+        wp [label="WordPress", shape=box, fillcolor="#FFFFFF"]; }
+    subgraph cluster_future { label="AIOps (FUTURE)"; fillcolor="#FCE4EC";
+        flink [label="Flink", shape=box, fillcolor="#FFFFFF"];
+        ml [label="ML Models", shape=box, fillcolor="#FFFFFF"];
+        llm [label="LLM Agent", shape=box, fillcolor="#FFFFFF"]; }
+    
+    logs -> flink [penwidth=2]; metrics -> ml [penwidth=2];
+    flink -> ml; ml -> llm; wp -> llm [style=dashed];
+}

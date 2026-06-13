@@ -1,0 +1,25 @@
+digraph TechStack {
+    rankdir=TB; splines=ortho;
+    node [style=filled, fontsize=11];
+    labelloc="t"; label="Technology Stack"; fontsize=16;
+    
+    subgraph cluster_iac { label="IaC"; fillcolor="#ECEFF1";
+        tf [label="Terraform", fillcolor="#FFFFFF"]; }
+    subgraph cluster_orch { label="Orchestration"; fillcolor="#E3F2FD";
+        k8s [label="Kubernetes", fillcolor="#FFFFFF"]; }
+    subgraph cluster_app { label="Applications"; fillcolor="#E8F5E9";
+        wp [label="WordPress", fillcolor="#FFFFFF"];
+        pg [label="Patroni+PostgreSQL", fillcolor="#FFFFFF"]; }
+    subgraph cluster_obs { label="Observability"; fillcolor="#FFF3E0";
+        prom [label="Prometheus", fillcolor="#FFFFFF"];
+        graf [label="Grafana", fillcolor="#FFFFFF"];
+        kafka [label="Kafka", fillcolor="#FFFFFF"];
+        ch [label="ClickHouse", fillcolor="#FFFFFF"]; }
+    subgraph cluster_bkp { label="Backup"; fillcolor="#F3E5F5";
+        velero [label="Velero", fillcolor="#FFFFFF"];
+        minio [label="MinIO", fillcolor="#FFFFFF"]; }
+    
+    k8s -> wp; k8s -> pg; wp -> pg [penwidth=2];
+    wp -> kafka; wp -> prom; prom -> graf;
+    velero -> minio;
+}

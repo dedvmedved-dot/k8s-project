@@ -1,28 +1,14 @@
 digraph Backup_Flow {
-    label="Поток бэкапирования\nVelero → MinIO → NFS";
-    labelloc=t; fontsize=18; fontname="Arial";
+    label="Backup Flow: Velero -> MinIO -> NFS"; labelloc=t; fontsize=18;
     rankdir=LR; splines=ortho;
-    nodesep=1.0; ranksep=1.2;
-    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
-    edge [fontname="Arial", fontsize=9];
+    node [shape=box, style=rounded, fontsize=10];
     
-    subgraph cluster_k8s {
-        label="Kubernetes кластер";
-        style=filled; fillcolor="#F0F0F0";
-        
-        wp [label="WordPress Pod\n+ MariaDB Pod", style=filled, fillcolor="#FFD0D0"];
-        velero [label="Velero Controller\nБэкап API объектов", style=filled, fillcolor="#D0D0FF"];
-        minio [label="MinIO Server\nS3-совместимое\nхранилище\nPVC 10Gi", style=filled, fillcolor="#D0FFD0"];
-    }
+    wp [label="WordPress Pod", fillcolor="#FFD0D0"];
+    velero [label="Velero Controller", fillcolor="#D0D0FF"];
+    minio [label="MinIO S3\nPVC 10Gi", fillcolor="#D0FFD0"];
+    nfs [label="NFS Server\nskhome01", fillcolor="#FFE0FF"];
     
-    subgraph cluster_external {
-        label="Внешняя инфраструктура";
-        style=filled; fillcolor="#F0F0F0";
-        nfs [label="NFS Server\nskhome01:192.168.0.107\n/srv/nfs/velero-backup\nПолный бэкап\nETCD + YAML + Velero", style=filled, fillcolor="#FFE0FF"];
-    }
-    
-    wp -> velero [label="1. Бэкап\nресурсов", color="#3366CC", penwidth=2];
-    velero -> minio [label="2. Сохранение\nчерез S3 API", color="#009900", penwidth=2];
-    minio -> nfs [label="3. Копирование\nна внешний NFS\nPython/boto3", color="#CC00CC", penwidth=2, style=bold];
-    nfs -> minio [label="4. Восстановление\nпри потере\nProxmox", color="#CC6600", penwidth=2, style=dashed];
+    wp -> velero [label="1. Backup"]; velero -> minio [label="2. Save S3"];
+    minio -> nfs [label="3. Copy to NFS", style=bold];
+    nfs -> minio [label="4. Restore", style=dashed];
 }

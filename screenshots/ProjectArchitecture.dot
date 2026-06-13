@@ -1,0 +1,20 @@
+digraph ProjectArchitecture {
+    rankdir=TB; splines=ortho; compound=true;
+    node [style=filled, fontsize=10];
+    labelloc="t"; label="Project Architecture"; fontsize=16;
+    
+    subgraph cluster_iac { label="IaC"; style=filled; fillcolor="#ECEFF1";
+        tf [label="Terraform", shape=box, fillcolor="#FFFFFF"]; }
+    subgraph cluster_k8s { label="Kubernetes"; style=filled; fillcolor="#E3F2FD";
+        m1 [label="Master", shape=box, fillcolor="#FFFFFF"];
+        w1 [label="Workers", shape=box, fillcolor="#FFFFFF"]; }
+    subgraph cluster_app { label="Apps"; style=filled; fillcolor="#E8F5E9";
+        wp [label="WordPress\n3 replicas", shape=box, fillcolor="#FFFFFF"];
+        pg [label="Patroni\n3 nodes", shape=cylinder, fillcolor="#FFFFFF"]; }
+    subgraph cluster_obs { label="Observability"; style=filled; fillcolor="#FFF3E0";
+        prom [label="Prometheus", shape=box, fillcolor="#FFFFFF"];
+        logs [label="Kafka+ClickHouse", shape=box, fillcolor="#FFFFFF"]; }
+    
+    tf -> m1; w1 -> wp; w1 -> pg; wp -> pg [label="SQL", penwidth=2];
+    wp -> logs [style=dashed]; wp -> prom [style=dashed];
+}

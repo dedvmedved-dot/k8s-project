@@ -1,53 +1,21 @@
 digraph K8s_Architecture {
-    label="Архитектура Kubernetes кластера";
-    labelloc=t; fontsize=20; fontname="Arial";
+    label="Архитектура Kubernetes кластера"; labelloc=t; fontsize=20;
     rankdir=TB; splines=ortho;
-    nodesep=0.5; ranksep=0.8;
-    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
-    edge [fontname="Arial", fontsize=9];
+    node [shape=box, style=rounded, fontsize=10];
     
-    subgraph cluster_proxmox {
-        label="Proxmox VE 9.2\nZFS: rpool 2TB + vm-pool mirror 2×1TB";
-        style=filled; fillcolor="#FFE8E8"; color="#CC0000"; penwidth=2;
-        
-        subgraph cluster_masters {
-            label="Control Plane (3 Master)";
-            style=filled; fillcolor="#FFD0D0"; color="#CC0000";
-            m1 [label="k8s-master1\n192.168.0.132\nAPI Server\netcd\nScheduler\nController Manager"];
-            m2 [label="k8s-master2\n192.168.0.133\nAPI Server\netcd\nScheduler"];
-            m3 [label="k8s-master3\n192.168.0.134\nAPI Server\netcd\nScheduler"];
-            m1 -> m2 [label="etcd Raft", dir=both, color="#666666"];
-            m2 -> m3 [label="etcd Raft", dir=both, color="#666666"];
-        }
-        
-        subgraph cluster_workers {
-            label="Worker Nodes (3 Worker)";
-            style=filled; fillcolor="#D0FFD0"; color="#009900";
-            w1 [label="k8s-worker\n192.168.0.137\ncontainerd\nkubelet\nkube-proxy"];
-            w2 [label="k8s-worker2\n192.168.0.135\ncontainerd\nkubelet\nkube-proxy"];
-            w3 [label="k8s-worker3\n192.168.0.136\ncontainerd\nkubelet\nkube-proxy"];
-        }
+    subgraph cluster_masters {
+        label="Control Plane (3 Master)"; style=filled; fillcolor="#FFD0D0";
+        m1 [label="k8s-master1\n.132"]; m2 [label="k8s-master2\n.133"]; m3 [label="k8s-master3\n.134"];
+        m1 -> m2 [dir=both]; m2 -> m3 [dir=both];
     }
-    
-    subgraph cluster_services {
-        label="Сервисы кластера";
-        style=filled; fillcolor="#E0E0FF"; color="#0000CC";
-        wp [label="WordPress\n2 реплики\n+ MariaDB\nnamespace: wordpress"];
-        mon [label="Prometheus + Grafana\nnamespace: monitoring\nDashboard 315, 1860"];
-        backup [label="Velero + MinIO\nnamespace: backup, velero\nPVC 10Gi"];
+    subgraph cluster_workers {
+        label="Worker Nodes"; style=filled; fillcolor="#D0FFD0";
+        w1 [label="worker1\n.137"]; w2 [label="worker2\n.135"]; w3 [label="worker3\n.136"];
     }
-    
-    subgraph cluster_external {
-        label="Внешнее хранилище";
-        style=filled; fillcolor="#FFE0FF"; color="#CC00CC";
-        nfs [label="skhome01\n192.168.0.107\nNFS Server\n/srv/nfs/velero-backup"];
+    subgraph cluster_svc {
+        label="Services"; style=filled; fillcolor="#E0E0FF";
+        wp [label="WordPress+MariaDB"]; mon [label="Prometheus+Grafana"]; bak [label="Velero+MinIO"];
     }
-    
-    m1 -> w1 [color="#006600", penwidth=1.5];
-    m1 -> w2 [color="#006600", penwidth=1.5];
-    m1 -> w3 [color="#006600", penwidth=1.5];
-    w1 -> wp [style=dashed, color="#333333"];
-    w2 -> mon [style=dashed, color="#333333"];
-    w3 -> backup [style=dashed, color="#333333"];
-    backup -> nfs [label="Бэкап на NFS", color="#CC00CC", penwidth=2, style=bold];
+    m1 -> w1; m1 -> w2; m1 -> w3;
+    w1 -> wp; w2 -> mon; w3 -> bak;
 }

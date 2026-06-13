@@ -1,0 +1,15 @@
+digraph RoadmapPosition {
+    rankdir=LR; splines=ortho;
+    node [style=filled, fontsize=11];
+    labelloc="t"; label="Roadmap Position"; fontsize=16;
+    
+    subgraph cluster_dz { label="Homework (DONE)"; style=filled; fillcolor="#E0F2F1";
+        dz [label="K8s + WordPress", shape=box, fillcolor="#FFFFFF"]; }
+    subgraph cluster_pr { label="PROJECT (NOW)\nDeadline: Sep 1"; style=filled; fillcolor="#FFF3E0";
+        db [label="Patroni DB", shape=box, fillcolor="#FFFFFF"];
+        web [label="WordPress HA", shape=box, fillcolor="#FFFFFF"];
+        fw [label="NetworkPolicy", shape=box, fillcolor="#FFFFFF"]; }
+    subgraph cluster_ai { label="AIOps (FUTURE)"; style=filled; fillcolor="#FCE4EC";
+        ai [label="ML + LLM", shape=box, style=dashed, fillcolor="#FFFFFF"]; }
+    dz -> web [style=dashed]; web -> ai [style=dashed];
+}
