@@ -1,0 +1,47 @@
+digraph Monitoring_Stack {
+    label="Архитектура мониторинга Prometheus + Grafana";
+    labelloc=t; fontsize=18; fontname="Arial";
+    rankdir=TB; splines=ortho;
+    nodesep=0.5; ranksep=0.8;
+    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
+    edge [fontname="Arial", fontsize=9];
+    
+    subgraph cluster_collectors {
+        label="Сборщики метрик (namespace: monitoring)";
+        style=filled; fillcolor="#E0FFE0";
+        ne [label="Node Exporter\n×6 подов\nМетрики CPU, память\nдиск, сеть"];
+        ksm [label="kube-state-metrics\n×1 под\nСостояние K8s\nобъектов"];
+        cad [label="cAdvisor\n×6 подов\nМетрики контейнеров"];
+    }
+    
+    subgraph cluster_prometheus {
+        label="Хранилище метрик";
+        style=filled; fillcolor="#E0E0FF";
+        prom [label="Prometheus Server\nПорт 9090\nСбор метрик каждые 15с\nPromQL запросы"];
+    }
+    
+    subgraph cluster_grafana {
+        label="Визуализация";
+        style=filled; fillcolor="#FFE0E0";
+        grafana [label="Grafana\nПорт 3000\nadmin / пароль\nDashboard 315 (K8s)\nDashboard 1860 (Nodes)"];
+    }
+    
+    subgraph cluster_targets {
+        label="Цели мониторинга";
+        style=filled; fillcolor="#FFFFE0";
+        nodes [label="6 Nodes\nReady"];
+        pods [label="Поды\n20+ Running"];
+        api [label="API Server\n:6443"];
+    }
+    
+    ne -> nodes [style=dashed, color="#666666"];
+    ksm -> pods [style=dashed, color="#666666"];
+    cad -> pods [style=dashed, color="#666666"];
+    
+    prom -> ne [label="scrape\n/metrics", color="#009900"];
+    prom -> ksm [label="scrape\n/metrics", color="#009900"];
+    prom -> cad [label="scrape\n/metrics", color="#009900"];
+    prom -> api [label="scrape\n/metrics", color="#009900"];
+    
+    grafana -> prom [label="PromQL\nData Source", color="#CC0000", penwidth=2];
+}

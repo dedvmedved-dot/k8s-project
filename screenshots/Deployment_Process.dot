@@ -1,0 +1,47 @@
+digraph Deployment_Process {
+    label="Процесс развертывания проекта\n4 этапа";
+    labelloc=t; fontsize=18; fontname="Arial";
+    rankdir=TB; splines=ortho;
+    nodesep=0.3; ranksep=0.5;
+    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
+    edge [fontname="Arial", fontsize=9];
+    
+    subgraph stage1 {
+        label="Этап 1: Подготовка Proxmox";
+        style=filled; fillcolor="#FFE8E8";
+        s1a [label="Установка Proxmox VE 9.2"];
+        s1b [label="ZFS mirror\nvm-pool 2×1TB"];
+        s1c [label="Шаблон Ubuntu 24.04\nCloud-init + Guest Agent"];
+        s1a -> s1b -> s1c;
+    }
+    
+    subgraph stage2 {
+        label="Этап 2: Развертывание ВМ";
+        style=filled; fillcolor="#FFE8CC";
+        s2a [label="Клонирование 6 ВМ"];
+        s2b [label="Статические IP\n192.168.0.132-137"];
+        s2c [label="ContainerD\nKubeadm, Kubelet"];
+        s2a -> s2b -> s2c;
+    }
+    
+    subgraph stage3 {
+        label="Этап 3: Кластер K8s";
+        style=filled; fillcolor="#FFFFCC";
+        s3a [label="kubeadm init\n--node-name\n--pod-network-cidr"];
+        s3b [label="Join Master2,3\nпауза 40 сек\netcd синхронизация"];
+        s3c [label="Join Workers\nkubeadm join"];
+        s3a -> s3b -> s3c;
+    }
+    
+    subgraph stage4 {
+        label="Этап 4: Сервисы";
+        style=filled; fillcolor="#CCFFCC";
+        s4a [label="Calico CNI\nIP-in-IP туннели"];
+        s4b [label="WordPress\n+ MariaDB"];
+        s4c [label="Velero + MinIO\n+ NFS бэкап"];
+        s4d [label="Prometheus\n+ Grafana"];
+        s4a -> s4b -> s4c -> s4d;
+    }
+    
+    stage1 -> stage2 -> stage3 -> stage4;
+}

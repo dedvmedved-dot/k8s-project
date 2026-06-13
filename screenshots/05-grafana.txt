@@ -1,0 +1,19 @@
+$ kubectl get pods -n monitoring
+NAME                                                 READY   STATUS    RESTARTS   AGE
+grafana-d5746cd4d-chxtf                              1/1     Running   0          72m
+prometheus-kube-state-metrics-99746f9d-6l792         1/1     Running   0          72m
+prometheus-prometheus-node-exporter-86pn4            1/1     Running   0          72m
+prometheus-prometheus-node-exporter-hsfbl            1/1     Running   0          72m
+prometheus-prometheus-node-exporter-n77nn            1/1     Running   0          72m
+prometheus-prometheus-node-exporter-nn7k2            1/1     Running   0          72m
+prometheus-prometheus-node-exporter-p9cdc            1/1     Running   0          72m
+prometheus-prometheus-node-exporter-rrlx7            1/1     Running   0          72m
+prometheus-prometheus-pushgateway-84d455bb87-ctcz6   1/1     Running   0          72m
+prometheus-server-6c57b8847c-rl9tg                   2/2     Running   0          72m
+$ kubectl get svc -n monitoring
+NAME                                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+grafana                               ClusterIP   10.99.58.148     <none>        80/TCP     72m
+prometheus-kube-state-metrics         ClusterIP   10.107.125.230   <none>        8080/TCP   72m
+prometheus-prometheus-node-exporter   ClusterIP   10.106.191.217   <none>        9100/TCP   72m
+prometheus-prometheus-pushgateway     ClusterIP   10.99.224.74     <none>        9091/TCP   72m
+prometheus-server                     ClusterIP   10.107.4.13      <none>        80/TCP     72m

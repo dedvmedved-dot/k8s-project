@@ -1,0 +1,44 @@
+digraph Calico_Network {
+    label="Сетевая архитектура Calico CNI\nIP-in-IP туннели для межузловой маршрутизации";
+    labelloc=t; fontsize=18; fontname="Arial";
+    rankdir=TB; splines=ortho;
+    nodesep=0.6; ranksep=1.0;
+    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
+    edge [fontname="Arial", fontsize=9];
+    
+    subgraph cluster_physical {
+        label="Физическая сеть 192.168.0.0/24";
+        style=filled; fillcolor="#FFFFE0";
+        
+        subgraph cluster_nodes {
+            label="Узлы кластера";
+            node [shape=box, style=rounded];
+            n1 [label="k8s-master1\n192.168.0.132\nCalico Node"];
+            n2 [label="k8s-worker\n192.168.0.137\nCalico Node"];
+            n3 [label="k8s-worker2\n192.168.0.135\nCalico Node"];
+        }
+    }
+    
+    subgraph cluster_overlay {
+        label="Calico Overlay Network 10.244.0.0/16\nIP-in-IP туннели";
+        style=filled; fillcolor="#E0FFFF";
+        
+        tunnel [label="IP-in-IP туннели\nмежду узлами\nИнкапсуляция: IP в IP\nMTU: 1440", shape=cylinder];
+        
+        subgraph cluster_pods {
+            label="Поды на узлах";
+            pod1 [label="Pod A\n10.244.1.10\nна master1"];
+            pod2 [label="Pod B\n10.244.254.20\nна worker"];
+            pod3 [label="Pod C\n10.244.126.30\nна worker2"];
+        }
+    }
+    
+    n1 -> tunnel [color="#0099CC", penwidth=2];
+    n2 -> tunnel [color="#0099CC", penwidth=2];
+    n3 -> tunnel [color="#0099CC", penwidth=2];
+    tunnel -> pod1 [style=dashed, color="#666666"];
+    tunnel -> pod2 [style=dashed, color="#666666"];
+    tunnel -> pod3 [style=dashed, color="#666666"];
+    pod1 -> pod2 [label="Маршрут\nчерез туннель", color="#CC6600", penwidth=1.5];
+    pod2 -> pod3 [label="Маршрут\nчерез туннель", color="#CC6600", penwidth=1.5];
+}

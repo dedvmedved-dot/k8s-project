@@ -1,0 +1,33 @@
+digraph DNS_Resolution {
+    label="Разрешение DNS в Kubernetes\nПроблема Alpine и её решение";
+    labelloc=t; fontsize=18; fontname="Arial";
+    rankdir=TB; splines=ortho;
+    node [shape=box, style=rounded, fontname="Arial", fontsize=10];
+    edge [fontname="Arial", fontsize=9];
+    
+    subgraph cluster_dns_ok {
+        label="✅ Правильный путь (glibc getaddrinfo)";
+        style=filled; fillcolor="#E0FFE0";
+        app [label="Приложение\n(curl, Velero, glibc)", shape=component];
+        resolver [label="Системный резолвер\ngetaddrinfo()", shape=box];
+        resolv [label="/etc/resolv.conf\nsearch svc.cluster.local\nnameserver 10.96.0.10", shape=note];
+        coredns [label="CoreDNS Service\n10.96.0.10:53\n2 пода: kube-dns", shape=cylinder];
+        result [label="✅ IP-адрес получен\nСоединение установлено", shape=box, style=bold];
+        
+        app -> resolver [label="1. Запрос DNS"];
+        resolver -> resolv [label="2. Читает\nконфиг"];
+        resolv -> coredns [label="3. Дополняет\nsearch-домен"];
+        coredns -> result [label="4. Возвращает\nIP пода"];
+    }
+    
+    subgraph cluster_dns_fail {
+        label="❌ Ошибочный путь (Alpine nslookup)";
+        style=filled; fillcolor="#FFE0E0";
+        alpine [label="Alpine контейнер\nnslookup", shape=component];
+        direct [label="Прямой запрос\nбез search-домена", shape=box];
+        fail [label="❌ NXDOMAIN\nСервер не найден", shape=box, style=bold];
+        
+        alpine -> direct [label="1. nslookup"];
+        direct -> fail [label="2. Не дополняет\nимя"];
+    }
+}

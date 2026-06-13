@@ -1,0 +1,11 @@
+$ kubectl get pods -n backup
+NAME                    READY   STATUS    RESTARTS         AGE
+minio-8f48c6f6b-pqk5j   1/1     Running   0                165m
+net-test                1/1     Running   22 (6m29s ago)   3h47m
+test-dns                1/1     Running   25 (18s ago)     4h10m
+$ kubectl get pvc -n backup
+NAME        STATUS   VOLUME     CAPACITY   ACCESS MODES   STORAGECLASS    VOLUMEATTRIBUTESCLASS   AGE
+minio-pvc   Bound    minio-pv   10Gi       RWO            local-storage   <unset>                 178m
+$ velero backup get
+NAME            STATUS   ERRORS   WARNINGS   CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
+wp-multi-node   Failed   0        0          2026-06-13 17:20:23 +0300 MSK   29d       default            <none>

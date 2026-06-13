@@ -1,36 +1,49 @@
-sk@skhome01:~/k8s-project$ ssh ubuntu@192.168.0.132 kubectl get pods -A -o wide
-NAMESPACE       NAME                                       READY   STATUS             RESTARTS         AGE     IP               NODE          NOMINATED NODE   READINESS GATES
-backup          minio-8f48c6f6b-pqk5j                      1/1     Running            0                67m     10.244.100.196   k8s-worker3   <none>           <none>
-backup          net-test                                   1/1     Running            12 (9m41s ago)   130m    10.244.126.7     k8s-worker2   <none>           <none>
-backup          test-dns                                   1/1     Running            15 (3m10s ago)   153m    10.244.254.129   k8s-worker    <none>           <none>
-ingress-nginx   ingress-nginx-admission-create-dqb52       0/1     Completed          0                3h38m   <none>           k8s-worker    <none>           <none>
-ingress-nginx   ingress-nginx-controller-7df66f8d-fnlgn    0/1     CrashLoopBackOff   67 (69s ago)     3h38m   10.244.5.9       k8s-worker3   <none>           <none>
-kube-system     calico-kube-controllers-564985c589-dxftd   1/1     Running            0                158m    10.244.5.13      k8s-worker3   <none>           <none>
-kube-system     calico-node-9lft2                          1/1     Running            0                158m    192.168.0.132    k8s-master1   <none>           <none>
-kube-system     calico-node-f2vbr                          1/1     Running            0                158m    192.168.0.136    k8s-worker3   <none>           <none>
-kube-system     calico-node-gzhxx                          1/1     Running            0                158m    192.168.0.137    k8s-worker    <none>           <none>
-kube-system     calico-node-krttj                          1/1     Running            0                158m    192.168.0.134    k8s-master3   <none>           <none>
-kube-system     calico-node-m7wrr                          1/1     Running            0                158m    192.168.0.135    k8s-worker2   <none>           <none>
-kube-system     calico-node-ngmsb                          1/1     Running            0                158m    192.168.0.133    k8s-master2   <none>           <none>
-kube-system     coredns-74c94d97d9-6fsz2                   1/1     Running            0                160m    10.244.4.105     k8s-worker2   <none>           <none>
-kube-system     coredns-74c94d97d9-sz7cq                   1/1     Running            0                160m    10.244.3.170     k8s-worker    <none>           <none>
-kube-system     curl-test                                  1/1     Running            14 (5m53s ago)   146m    10.244.100.193   k8s-worker3   <none>           <none>
-kube-system     etcd-k8s-master1                           1/1     Running            0                4h31m   192.168.0.132    k8s-master1   <none>           <none>
-kube-system     etcd-k8s-master2                           1/1     Running            0                4h30m   192.168.0.133    k8s-master2   <none>           <none>
-kube-system     etcd-k8s-master3                           1/1     Running            0                4h29m   192.168.0.134    k8s-master3   <none>           <none>
-kube-system     kube-apiserver-k8s-master1                 1/1     Running            3                4h31m   192.168.0.132    k8s-master1   <none>           <none>
-kube-system     kube-apiserver-k8s-master2                 1/1     Running            4                4h30m   192.168.0.133    k8s-master2   <none>           <none>
-kube-system     kube-apiserver-k8s-master3                 1/1     Running            5                4h29m   192.168.0.134    k8s-master3   <none>           <none>
-kube-system     kube-controller-manager-k8s-master1        1/1     Running            2                4h31m   192.168.0.132    k8s-master1   <none>           <none>
-kube-system     kube-controller-manager-k8s-master2        1/1     Running            2                4h30m   192.168.0.133    k8s-master2   <none>           <none>
-kube-system     kube-controller-manager-k8s-master3        1/1     Running            2                4h29m   192.168.0.134    k8s-master3   <none>           <none>
-kube-system     kube-proxy-c8bfd                           1/1     Running            0                148m    192.168.0.134    k8s-master3   <none>           <none>
-kube-system     kube-proxy-j648s                           1/1     Running            0                148m    192.168.0.136    k8s-worker3   <none>           <none>
-kube-system     kube-proxy-kh4qf                           1/1     Running            0                148m    192.168.0.132    k8s-master1   <none>           <none>
-kube-system     kube-proxy-p2vsv                           1/1     Running            0                148m    192.168.0.133    k8s-master2   <none>           <none>
-kube-system     kube-proxy-t8tk4                           1/1     Running            0                148m    192.168.0.135    k8s-worker2   <none>           <none>
-kube-system     kube-proxy-zlcv2                           1/1     Running            0                148m    192.168.0.137    k8s-worker    <none>           <none>
-kube-system     kube-scheduler-k8s-master1                 1/1     Running            3                4h31m   192.168.0.132    k8s-master1   <none>           <none>
-kube-system     kube-scheduler-k8s-master2                 1/1     Running            3                4h30m   192.168.0.133    k8s-master2   <none>           <none>
-kube-system     kube-scheduler-k8s-master3                 1/1     Running            3                4h29m   192.168.0.134    k8s-master3   <none>           <none>
-velero          velero-847d758ff4-ch5wt                    1/1     Running            0                128m    10.244.254.131   k8s-worker    <none>           <none>
+$ kubectl get pods -A
+NAMESPACE       NAME                                                 READY   STATUS      RESTARTS         AGE
+backup          minio-8f48c6f6b-pqk5j                                1/1     Running     0                165m
+backup          net-test                                             1/1     Running     22 (6m28s ago)   3h47m
+backup          test-dns                                             1/1     Running     25 (17s ago)     4h10m
+ingress-nginx   ingress-nginx-admission-create-dqb52                 0/1     Completed   0                5h15m
+ingress-nginx   ingress-nginx-controller-7df66f8d-fnlgn              0/1     Running     95 (53s ago)     5h15m
+kube-system     calico-kube-controllers-564985c589-dxftd             1/1     Running     0                4h15m
+kube-system     calico-node-9lft2                                    1/1     Running     0                4h15m
+kube-system     calico-node-f2vbr                                    1/1     Running     0                4h15m
+kube-system     calico-node-gzhxx                                    1/1     Running     0                4h15m
+kube-system     calico-node-krttj                                    1/1     Running     0                4h15m
+kube-system     calico-node-m7wrr                                    1/1     Running     0                4h15m
+kube-system     calico-node-ngmsb                                    1/1     Running     0                4h15m
+kube-system     coredns-74c94d97d9-6fsz2                             1/1     Running     0                4h17m
+kube-system     coredns-74c94d97d9-sz7cq                             1/1     Running     0                4h17m
+kube-system     curl-test                                            1/1     Running     24 (2m49s ago)   4h3m
+kube-system     etcd-k8s-master1                                     1/1     Running     0                6h8m
+kube-system     etcd-k8s-master2                                     1/1     Running     0                6h7m
+kube-system     etcd-k8s-master3                                     1/1     Running     0                6h6m
+kube-system     kube-apiserver-k8s-master1                           1/1     Running     3                6h8m
+kube-system     kube-apiserver-k8s-master2                           1/1     Running     4                6h7m
+kube-system     kube-apiserver-k8s-master3                           1/1     Running     5                6h6m
+kube-system     kube-controller-manager-k8s-master1                  1/1     Running     2                6h8m
+kube-system     kube-controller-manager-k8s-master2                  1/1     Running     2                6h7m
+kube-system     kube-controller-manager-k8s-master3                  1/1     Running     2                6h6m
+kube-system     kube-proxy-c8bfd                                     1/1     Running     0                4h6m
+kube-system     kube-proxy-j648s                                     1/1     Running     0                4h6m
+kube-system     kube-proxy-kh4qf                                     1/1     Running     0                4h6m
+kube-system     kube-proxy-p2vsv                                     1/1     Running     0                4h6m
+kube-system     kube-proxy-t8tk4                                     1/1     Running     0                4h6m
+kube-system     kube-proxy-zlcv2                                     1/1     Running     0                4h6m
+kube-system     kube-scheduler-k8s-master1                           1/1     Running     3                6h8m
+kube-system     kube-scheduler-k8s-master2                           1/1     Running     3                6h7m
+kube-system     kube-scheduler-k8s-master3                           1/1     Running     3                6h6m
+monitoring      grafana-d5746cd4d-chxtf                              1/1     Running     0                72m
+monitoring      prometheus-kube-state-metrics-99746f9d-6l792         1/1     Running     0                72m
+monitoring      prometheus-prometheus-node-exporter-86pn4            1/1     Running     0                72m
+monitoring      prometheus-prometheus-node-exporter-hsfbl            1/1     Running     0                72m
+monitoring      prometheus-prometheus-node-exporter-n77nn            1/1     Running     0                72m
+monitoring      prometheus-prometheus-node-exporter-nn7k2            1/1     Running     0                72m
+monitoring      prometheus-prometheus-node-exporter-p9cdc            1/1     Running     0                72m
+monitoring      prometheus-prometheus-node-exporter-rrlx7            1/1     Running     0                72m
+monitoring      prometheus-prometheus-pushgateway-84d455bb87-ctcz6   1/1     Running     0                72m
+monitoring      prometheus-server-6c57b8847c-rl9tg                   2/2     Running     0                72m
+velero          velero-847d758ff4-ch5wt                              1/1     Running     0                3h45m
+wordpress       mariadb-5d5c74df88-ftmvx                             1/1     Running     0                5h15m
+wordpress       wordpress-6f66c68ddd-gkxm9                           1/1     Running     0                5h15m
+wordpress       wordpress-6f66c68ddd-tj86m                           1/1     Running     0                5h15m
