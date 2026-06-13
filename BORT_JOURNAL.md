@@ -234,3 +234,48 @@ ssh ubuntu@192.168.0.132 "kubectl get nodes; kubectl get pods -A | grep -v Runni
 ```bash
 ssh ubuntu@192.168.0.132 "kubectl get nodes; kubectl get pods -A | grep -v Running | grep -v Completed"
 
+
+---
+
+## Сессия 6: 13 июня 2026, 19:00–20:00 (README + Проектная работа)
+
+### Выполненные работы
+- [x] Создан полный README.md с 6 схемами архитектуры
+- [x] Схемы конвертированы в .svg через Graphviz
+- [x] Созданы скриншоты команд (kubectl, velero)
+- [x] Определён план проектной работы
+
+### Текущее состояние
+| Компонент | Статус | Примечание |
+|-----------|--------|------------|
+| K8s кластер | ✅ Ready | 6 узлов |
+| Calico CNI | ✅ Работает | ipipMode: Always |
+| CoreDNS | ✅ Работает | curl резолвит имена |
+| WordPress + MariaDB | ✅ Running | 2 реплики |
+| MinIO + PVC | ✅ Running | local-storage 10Gi |
+| Velero | ✅ Completed | 2 успешных бэкапа |
+| Prometheus + Grafana | ✅ Running | Дашборды 315, 1860 |
+| NFS бэкап | ✅ Работает | Полный бэкап на skhome01 |
+
+### Проектная работа (дедлайн: 1 сентября 2026)
+**Что нужно доделать:**
+- [ ] Заменить MariaDB на Patroni + PostgreSQL (3 узла)
+- [ ] Настроить NetworkPolicy (межсетевой экран)
+- [ ] Настроить Ingress для WordPress
+- [ ] Terraform + Ansible (автоматизация)
+- [ ] Filebeat + Kafka + ClickHouse (сбор логов)
+- [ ] pgBackRest (бэкап PostgreSQL)
+- [ ] AlertManager (оповещения)
+
+### Ключевые выводы
+- README.md с SVG-схемами лучше воспринимается, чем ASCII
+- Graphviz позволяет хранить схемы как код (.dot) и генерировать изображения
+- Проектная работа использует K8s кластер как фундамент для AIOps
+
+### Восстановление
+```bash
+cd ~/k8s-project
+git pull
+cat README.md | head -50
+ssh ubuntu@192.168.0.132 "kubectl get nodes"
+```

@@ -1,39 +1,79 @@
-# 🚀 Kubernetes Production Cluster
+# 🚀 Kubernetes Production Cluster + Проектная работа
 
-**Развертывание отказоустойчивого Kubernetes кластера с WordPress, бэкапированием и мониторингом**
+**Отказоустойчивый кластер для высоконагруженных веб-сервисов**
 
 ---
 
 ## 📋 Содержание
 
-1. [Архитектура](#архитектура)
-2. [Процесс развертывания](#процесс-развертывания)
-3. [Сетевая архитектура и DNS](#сетевая-архитектура-и-dns)
-4. [Бэкапирование: Velero + MinIO + NFS](#бэкапирование-velero--minio--nfs)
-5. [Мониторинг: Prometheus + Grafana](#мониторинг-prometheus--grafana)
-6. [Проверка работы](#проверка-работы)
-7. [Структура репозитория](#структура-репозитория)
-8. [Трудности и решения](#трудности-и-решения)
+1. [Дорожная карта проекта](#дорожная-карта-проекта)
+2. [Архитектура](#архитектура)
+3. [Процесс развертывания](#процесс-развертывания)
+4. [Сетевая архитектура и DNS](#сетевая-архитектура-и-dns)
+5. [Бэкапирование: Velero + MinIO + NFS](#бэкапирование-velero--minio--nfs)
+6. [Мониторинг: Prometheus + Grafana](#мониторинг-prometheus--grafana)
+7. [Проектная работа](#проектная-работа)
+8. [Проверка работы](#проверка-работы)
+9. [Структура репозитория](#структура-репозитория)
+10. [Трудности и решения](#трудности-и-решения)
+
+---
+
+## Дорожная карта проекта
+
+### Схема: Место проекта в общей дорожной карте
+
+![Место проекта](screenshots/RoadmapPosition.svg)
+
+**Описание:** Проектная работа — это мост между выполненным домашним заданием по Kubernetes и будущей AIOps-системой для анализа логов. Она объединяет компоненты из предыдущих ДЗ (K8s, Patroni, Kafka, Terraform) в единую отказоустойчивую систему.
+
+### Этапы развития
+
+| Этап | Срок | Цель | Статус |
+|------|------|------|--------|
+| **ДЗ** | Май-Июнь 2026 | K8s + WordPress + Бэкап + Мониторинг | ✅ Выполнено |
+| **Проект** | Июнь-Август 2026 | Отказоустойчивый кластер (Patroni, NetworkPolicy, ELK, IaC) | 🔄 В процессе |
+| **AIOps** | Сентябрь 2026 - Июнь 2027 | ML + LLM для анализа логов | 📅 Планируется |
+
+### Что уже сделано (ДЗ)
+
+| Компонент | Статус |
+|-----------|--------|
+| K8s кластер (6 узлов) | ✅ Ready |
+| Calico CNI | ✅ ipipMode: Always |
+| WordPress + MariaDB | ✅ Running |
+| Velero + MinIO + PVC | ✅ Completed |
+| Prometheus + Grafana | ✅ Dashboard 315, 1860 |
+| NFS внешний бэкап | ✅ skhome01 |
+
+### Что нужно сделать (Проектная работа)
+
+| Компонент | Приоритет | Статус |
+|-----------|----------|--------|
+| Patroni + PostgreSQL (3 узла) | 🔴 Критично | ❌ |
+| NetworkPolicy | 🔴 Критично | ❌ |
+| Ingress для WordPress | 🟡 Важно | ⚠️ Частично |
+| Terraform + Proxmox | 🟡 Важно | ❌ |
+| Filebeat + Kafka + ClickHouse | 🟡 Важно | ❌ |
+| pgBackRest | 🟡 Важно | ❌ |
+| AlertManager | 🟢 Желательно | ❌ |
+| Ansible | 🟢 Желательно | ❌ |
 
 ---
 
 ## Архитектура
 
-### Схема: Архитектура K8s кластера
+### Схема: Общая архитектура кластера
 
 ![Архитектура K8s](screenshots/K8s_Architecture.svg)
 
 **Описание:** Кластер развернут на гипервизоре Proxmox VE 9.2 с ZFS. Состоит из 6 узлов: 3 master (control plane) для отказоустойчивости API и etcd, 3 worker для размещения рабочих нагрузок. Все узлы соединены через Calico CNI с IP-in-IP туннелями. Сервисы распределены по namespace'ам: wordpress, backup, velero, monitoring. Для внешнего хранения бэкапов используется NFS сервер на skhome01.
 
----
-
-## Процесс развертывания
-
 ### Схема: Процесс развертывания
 
 ![Процесс развертывания](screenshots/Deployment_Process.svg)
 
-**Описание:** Проект разворачивался в 4 этапа. На первом этапе подготовлен гипервизор с ZFS mirror для защиты данных ВМ. Второй этап — клонирование 6 ВМ из шаблона Ubuntu 24.04 с Cloud-init. Третий этап — инициализация Kubernetes с ручной настройкой etcd (паузы 40 сек между подключением master-узлов). Четвертый этап — установка сервисов: Calico CNI, WordPress, Velero, Prometheus.
+**Описание:** Проект разворачивался в 4 этапа. На первом этапе подготовлен гипервизор с ZFS mirror для защиты данных ВМ. Второй этап — клонирование 6 ВМ из шаблона Ubuntu 24.04 с Cloud-init. Третий этап — инициализация Kubernetes с ручной настройкой etcd. Четвертый этап — установка сервисов: Calico CNI, WordPress, Velero, Prometheus.
 
 ---
 
@@ -43,13 +83,13 @@
 
 ![Calico Network](screenshots/Calico_Network.svg)
 
-**Описание:** Calico использует IP-in-IP туннели для инкапсуляции трафика между узлами. Все поды получают IP из сети 10.244.0.0/16, сервисы — из 10.96.0.0/12. Calico поддерживает NetworkPolicy для безопасности и работает без внешнего etcd (использует Kubernetes API).
+**Описание:** Calico использует IP-in-IP туннели для инкапсуляции трафика между узлами. Все поды получают IP из сети 10.244.0.0/16, сервисы — из 10.96.0.0/12. Calico поддерживает NetworkPolicy для безопасности.
 
 ### Схема: DNS разрешение
 
 ![DNS разрешение](screenshots/DNS_Resolution.svg)
 
-**Описание:** CoreDNS работает как Service (10.96.0.10:53). Приложения с glibc (curl, Velero, WordPress) корректно разрешают имена через search-домены из /etc/resolv.conf. Alpine-образы (nslookup) не используют search-домены, что приводило к ошибочному выводу о неработоспособности DNS. Решение: использовать системный резолвер (getaddrinfo) вместо nslookup.
+**Описание:** CoreDNS работает как Service (10.96.0.10:53). Приложения с glibc (curl, Velero, WordPress) корректно разрешают имена через search-домены из /etc/resolv.conf. Alpine-образы (nslookup) не используют search-домены, что приводило к ошибочному выводу о неработоспособности DNS.
 
 ---
 
@@ -59,12 +99,7 @@
 
 ![Поток бэкапа](screenshots/Backup_Flow.svg)
 
-**Описание:** Velero создает бэкапы ресурсов Kubernetes (поды, PVC, конфигурации) и сохраняет их в MinIO — S3-совместимое объектное хранилище. MinIO использует PVC (local-storage) для постоянного хранения. Для защиты от полной потери Proxmox бэкапы копируются на внешний NFS сервер (skhome01) через Python/boto3.
-
-**Компоненты:**
-- **Velero** — создает снапшоты API объектов K8s
-- **MinIO** — S3-совместимое хранилище с PVC 10Gi
-- **NFS** — внешнее хранилище для полного бэкапа
+**Описание:** Velero создает бэкапы ресурсов Kubernetes и сохраняет их в MinIO — S3-совместимое объектное хранилище. MinIO использует PVC (local-storage) для постоянного хранения. Для защиты от полной потери Proxmox бэкапы копируются на внешний NFS сервер (skhome01) через Python/boto3.
 
 **Команды:**
 ```bash
@@ -75,64 +110,104 @@ velero backup create wp-backup --include-namespaces wordpress
 velero backup get
 
 # Полный бэкап на NFS
-./scripts/backup-full.sh
+ssh ubuntu@192.168.0.132 "sudo mount -t nfs 192.168.0.107:/srv/nfs/velero-backup /mnt/nfs-velero"
+```
 
-Мониторинг: Prometheus + Grafana
-Схема: Мониторинг
+---
 
-https://screenshots/Monitoring_Stack.svg
+## Мониторинг: Prometheus + Grafana
 
-Описание: Prometheus собирает метрики с Node Exporter (системные), kube-state-metrics (состояние K8s), cAdvisor (контейнеры) и API Server. Grafana визуализирует метрики через дашборды: Dashboard 315 (Kubernetes Cluster), Dashboard 1860 (Node Exporter Full).
+### Схема: Архитектура мониторинга
 
-Доступ:
+![Мониторинг](screenshots/Monitoring_Stack.svg)
 
-    Grafana: http://192.168.0.132:3000
+**Описание:** Prometheus собирает метрики с Node Exporter (системные), kube-state-metrics (состояние K8s), cAdvisor (контейнеры) и API Server. Grafana визуализирует метрики через дашборды: Dashboard 315 (Kubernetes Cluster), Dashboard 1860 (Node Exporter Full).
 
-    Логин: admin
+**Доступ:**
+- **Grafana:** http://192.168.0.132:3000
+- **Логин:** admin
+- **Пароль:** см. `kubectl get secret grafana -n monitoring -o jsonpath="{.data.admin-password}" | base64 --decode`
 
-    Пароль: F7gafwDfFT2Vzpu4xNw75a1InTZ39H56MhKLPRab
-
-Установка:
-bash
-
+**Установка:**
+```bash
 helm install prometheus prometheus-community/prometheus -n monitoring
 helm install grafana grafana/grafana -n monitoring
+```
 
-Проверка работы
-Узлы кластера
-text
+---
 
+## Проектная работа
+
+### Схема: Архитектура проектной работы
+
+![Архитектура проекта](screenshots/ProjectArchitecture.svg)
+
+**Описание:** Проектная работа развивает базовый кластер K8s до отказоустойчивой системы. Ключевые отличия: кластерная СУБД Patroni (3 узла PostgreSQL вместо одиночной MariaDB), межсетевой экран NetworkPolicy, централизованный сбор логов (Filebeat → Kafka → ClickHouse), автоматизация через Terraform + Ansible.
+
+### Схема: Потоки данных
+
+![Потоки данных](screenshots/DataFlow.svg)
+
+**Описание:** В системе циркулируют 4 типа данных: пользовательский трафик (HTTP → WordPress → PostgreSQL), логи (Filebeat → Kafka → ClickHouse → Grafana), метрики (Prometheus → Grafana → AlertManager), бэкапы (Velero/pgBackRest → MinIO → NFS).
+
+### Схема: Технологический стек
+
+![Технологический стек](screenshots/TechStack.svg)
+
+**Описание:** Стек разделен на 6 слоев: Infrastructure as Code (Terraform, Ansible), Оркестрация (Kubernetes, Ingress), Приложения (WordPress, Patroni), Безопасность (NetworkPolicy), Наблюдаемость (Prometheus, Grafana, Kafka, ClickHouse), Бэкап (Velero, pgBackRest, MinIO).
+
+### Схема: План реализации
+
+![План реализации](screenshots/ImplementationPlan.svg)
+
+**Описание:** Реализация разделена на 3 этапа: подготовка инфраструктуры (Terraform → K8s → Ingress → Patroni), деплой приложений (WordPress → Ingress → NetworkPolicy), наблюдаемость и бэкап (Prometheus → ELK → Velero/pgBackRest).
+
+### Схема: От проекта к AIOps
+
+![От проекта к AIOps](screenshots/ProjectToAIOps.svg)
+
+**Описание:** Проектная работа закладывает фундамент для AIOps-системы: логи из Kafka+ClickHouse станут источником для Flink-обработки, метрики Prometheus — входными данными для ML-моделей, WordPress+PostgreSQL — узлами графа зависимостей для каскадного анализа отказов.
+
+---
+
+## Проверка работы
+
+### Узлы кластера
+```
 $ kubectl get nodes
+```
+![Узлы кластера](screenshots/01-k8s-nodes.txt)
 
-https://screenshots/01-k8s-nodes.txt
-Все поды
-text
-
+### Все поды
+```
 $ kubectl get pods -A
+```
+![Все поды](screenshots/02-all-pods.txt)
 
-https://screenshots/02-all-pods.txt
-WordPress
-text
-
+### WordPress
+```
 $ kubectl get pods -n wordpress
+```
+![WordPress](screenshots/03-wordpress.txt)
 
-https://screenshots/03-wordpress.txt
-Velero + MinIO
-text
-
+### Velero + MinIO
+```
 $ kubectl get pods -n backup
 $ velero backup get
+```
+![Velero](screenshots/04-velero-minio.txt)
 
-https://screenshots/04-velero-minio.txt
-Grafana
-text
-
+### Grafana
+```
 $ kubectl get pods -n monitoring
+```
+![Grafana](screenshots/05-grafana.txt)
 
-https://screenshots/05-grafana.txt
-Структура репозитория
-text
+---
 
+## Структура репозитория
+
+```
 k8s-project/
 ├── README.md                          # Документация проекта
 ├── BORT_JOURNAL.md                    # Бортовой журнал
@@ -149,6 +224,18 @@ k8s-project/
 │   ├── Monitoring_Stack.svg           # Схема мониторинга
 │   ├── Deployment_Process.dot         # Исходник схемы развертывания
 │   ├── Deployment_Process.svg         # Схема процесса развертывания
+│   ├── RoadmapPosition.dot            # Дорожная карта
+│   ├── RoadmapPosition.svg
+│   ├── ProjectArchitecture.dot        # Архитектура проекта
+│   ├── ProjectArchitecture.svg
+│   ├── DataFlow.dot                   # Потоки данных
+│   ├── DataFlow.svg
+│   ├── TechStack.dot                  # Технологический стек
+│   ├── TechStack.svg
+│   ├── ImplementationPlan.dot         # План реализации
+│   ├── ImplementationPlan.svg
+│   ├── ProjectToAIOps.dot             # От проекта к AIOps
+│   ├── ProjectToAIOps.svg
 │   ├── 01-k8s-nodes.txt              # Скриншот: узлы
 │   ├── 02-all-pods.txt               # Скриншот: все поды
 │   ├── 03-wordpress.txt              # Скриншот: WordPress
@@ -166,67 +253,62 @@ k8s-project/
 └── config/                            # Конфигурации
     ├── calico.yaml
     └── credentials-velero
+```
 
-Описание ключевых файлов
+### Описание ключевых файлов
 
-README.md — полная документация проекта с описанием архитектуры, процесса установки, трудностей и решений.
+**README.md** — полная документация с дорожной картой, схемами архитектуры, описанием проектной работы.
 
-BORT_JOURNAL.md — бортовой журнал с хронологией всех сессий, ключевыми точками восстановления и техническими заметками.
+**BORT_JOURNAL.md** — хронология всех сессий с техническими деталями, точками восстановления.
 
-screenshots/*.dot — исходные файлы схем Graphviz для генерации SVG-изображений. При изменении архитектуры достаточно обновить .dot файл и перегенерировать SVG командой dot -Tsvg file.dot -o file.svg.
+**screenshots/*.dot** — исходники схем Graphviz. Для генерации SVG: `dot -Tsvg file.dot -o file.svg`
 
-manifests/*.yaml — Kubernetes манифесты для развертывания WordPress, MariaDB и MinIO. Включают Deployments, Services, PVC и Ingress.
+**screenshots/*.svg** — сгенерированные векторные схемы для вставки в документацию.
 
-scripts/backup-full.sh — скрипт полного бэкапа инфраструктуры (ETCD, YAML, конфигурации, Velero) на NFS.
+**manifests/*.yaml** — Kubernetes манифесты (WordPress, MariaDB, MinIO).
 
-scripts/sync-velero-nfs.py — Python скрипт для синхронизации бэкапов Velero из MinIO на NFS через S3 API.
-Трудности и решения
-1. Кластер не собирался (etcd timeout)
+**scripts/backup-full.sh** — скрипт полного бэкапа (ETCD + YAML + Velero) на NFS.
 
-Проблема: При одновременном подключении master-узлов etcd не успевал синхронизироваться.
+---
 
-Решение:
+## Трудности и решения
 
-    Использовать --node-name при kubeadm init
+### 1. Кластер не собирался (etcd timeout)
+**Проблема:** При одновременном подключении master-узлов etcd не успевал синхронизироваться.
 
-    Подключать master-узлы с паузой 40 секунд
+**Решение:**
+- Использовать `--node-name` при kubeadm init
+- Подключать master-узлы с паузой 40 секунд
+- Проверять статус etcd перед подключением следующего узла
 
-    Проверять статус etcd перед подключением следующего узла
+### 2. DNS не работал (NXDOMAIN)
+**Проблема:** После перехода с Flannel на Calico поды сохранили старые IP.
 
-2. DNS не работал (NXDOMAIN)
+**Решение:**
+- Пересоздать все поды после смены CNI
+- Не использовать nslookup в Alpine-образах для проверки DNS
 
-Проблема: После перехода с Flannel на Calico поды сохранили старые IP, CoreDNS не мог связаться с API Server.
+### 3. MinIO терял данные (emptyDir)
+**Проблема:** Данные удалялись при пересоздании пода.
 
-Решение:
+**Решение:** PVC с local-storage, PV с nodeAffinity, директория /data/minio на узлах.
 
-    Пересоздать все поды после смены CNI
+### 4. PVC в Pending
+**Проблема:** StorageClass не настроен, директория не создана.
 
-    Не использовать nslookup в Alpine-образах для проверки DNS
+**Решение:** StorageClass `local-storage` + PV с nodeAffinity + создать директорию на worker-узлах.
 
-3. MinIO терял данные
+---
 
-Проблема: Использовался emptyDir — данные удалялись при пересоздании пода.
+## Заключение
 
-Решение: Создать PVC с local-storage (PV на worker-узле).
-4. PVC в Pending
+✅ K8s кластер из 6 узлов (3 master + 3 worker)  
+✅ Calico CNI с IP-in-IP туннелями  
+✅ WordPress + MariaDB (2 реплики)  
+✅ Velero + MinIO (PVC 10Gi) + NFS бэкап  
+✅ Prometheus + Grafana (дашборды 315, 1860)  
+✅ Полный бэкап инфраструктуры на внешний NFS  
 
-Проблема: Не был настроен StorageClass, директория не создана на узле.
+**Следующий этап:** Проектная работа — замена MariaDB на Patroni + PostgreSQL, NetworkPolicy, сбор логов.
 
-Решение:
-
-    Создать StorageClass local-storage
-
-    Создать директорию /data/minio на всех worker-узлах
-
-    Настроить PV с nodeAffinity
-
-Заключение
-
-✅ Кластер Kubernetes из 6 узлов (3 master + 3 worker)
-✅ Calico CNI с IP-in-IP туннелями
-✅ WordPress + MariaDB (2 реплики)
-✅ Velero + MinIO (PVC 10Gi) + NFS бэкап
-✅ Prometheus + Grafana (дашборды 315, 1860)
-✅ Полный бэкап инфраструктуры на внешний NFS
-
-Проект готов к сдаче!
+**Проект готов к продолжению!**
