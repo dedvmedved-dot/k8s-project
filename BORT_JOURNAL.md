@@ -193,3 +193,44 @@ ssh root@192.168.0.200 "zpool status vm-pool"
 ```bash
 ssh ubuntu@192.168.0.132 "kubectl get nodes; kubectl get pods -A | grep -v Running | grep -v Completed"
 
+
+---
+
+## Сессия 5: 13 июня 2026, 14:00–17:30 (DNS, Calico, Velero + MinIO)
+
+### Выполненные работы
+- [x] Диагностирована проблема DNS: `nslookup` не работает в Alpine-образах, но системный резолвер (glibc) работает
+- [x] Обнаружен конфликт IP-адресов после перехода с Flannel на Calico
+- [x] Flannel удалён, установлен Calico (CNI)
+- [x] Calico межузловая маршрутизация работает (проверено curl-тестом между подами на разных узлах)
+- [x] MinIO работает с Calico
+- [x] Velero + MinIO: два успешных бэкапа Completed на разных узлах
+
+### Ключевые находки
+- **DNS работает:** `curl https://kubernetes.default.svc` → ok, но `nslookup` в Alpine выдаёт NXDOMAIN (не использует search-домены)
+- **Переход Flannel → Calico:** старые поды сохраняют IP из диапазона Flannel, нужно пересоздавать ВСЕ поды
+- **MinIO emptyDir:** данные теряются при пересоздании пода → нужно использовать PVC для production
+- **Calico ipipMode: Always** — использует IP-in-IP туннели для межузловой маршрутизации
+- **Velero требует bucket:** нужно создавать через `mkdir /data/velero` в MinIO
+
+### Текущее состояние
+| Компонент | Статус | Примечание |
+|-----------|--------|------------|
+| K8s кластер | ✅ Ready | 6 узлов |
+| Calico CNI | ✅ Работает | ipipMode: Always |
+| CoreDNS | ✅ Работает | curl резолвит имена |
+| MinIO | ✅ Running | emptyDir (не продакшн) |
+| Velero | ✅ Completed | 2 успешных бэкапа |
+| WordPress | ✅ Running | 2 пода |
+| MariaDB | ✅ Running | 1 под |
+
+### Технические заметки
+- **MinIO образ:** `quay.io/minio/minio:RELEASE.2022-04-12T06-55-35Z` (без x86-64-v2)
+- **Calico манифест:** `https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/calico.yaml`
+- **DNS для приложений:** использовать системный резолвер (getaddrinfo), не `nslookup`
+- **После смены CNI:** пересоздать все поды (`kubectl delete pods --all -n <namespace>`)
+
+### Восстановление
+```bash
+ssh ubuntu@192.168.0.132 "kubectl get nodes; kubectl get pods -A | grep -v Running | grep -v Completed"
+
