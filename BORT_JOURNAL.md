@@ -109,3 +109,46 @@ ssh ubuntu@192.168.0.126 "kubectl get pods -A | grep -v Running | grep -v Comple
 - **MinIO:** использовать старые версии из quay.io (CPU без x86-64-v2)
 - **Образы:** скачивать вручную через `sudo ctr image pull` на worker-узлах
 - **Velero:** устанавливать ПОСЛЕ MinIO и проверки DNS
+
+---
+
+## Сессия 4: 13 июня 2026, 10:00–15:00 (чистая установка)
+
+### Выполненные работы
+- [x] Полная переустановка Proxmox на 2TB диск (nvme0n1) с ZFS
+- [x] Создано зеркало vm-pool из двух 1TB дисков (nvme1n1 + nvme2n1) для ВМ
+- [x] Создан шаблон Ubuntu 24.04 с Cloud-init и Guest Agent
+- [x] Развёрнуто 6 ВМ для K8s (3 master + 3 worker)
+- [x] Kubernetes 1.30.14 установлен, кластер работает (6 узлов Ready)
+- [x] WordPress + MariaDB развёрнуты (2 пода Running)
+- [x] Ingress Controller (Nginx) работает
+- [x] Prometheus + Grafana установлены (через Helm)
+
+### Текущая конфигурация хранилищ
+| Диск | Размер | Назначение | Тип |
+|------|--------|------------|-----|
+| nvme0n1 | 2TB | Система Proxmox | ZFS rpool |
+| nvme1n1 + nvme2n1 | 1TB + 1TB | Зеркало для ВМ | ZFS vm-pool (mirror) |
+
+### Текущее состояние K8s
+| Узел | IP | Роль | Статус |
+|------|-----|------|--------|
+| k8s-master1 | 192.168.0.132 | control-plane | Ready |
+| k8s-master2 | 192.168.0.133 | control-plane | Ready |
+| k8s-master3 | 192.168.0.134 | control-plane | Ready |
+| k8s-worker | 192.168.0.137 | worker | Ready |
+| k8s-worker2 | 192.168.0.135 | worker | Ready |
+| k8s-worker3 | 192.168.0.136 | worker | Ready |
+
+### Ключевые уроки
+- Установка K8s с `--node-name` решает проблему одинаковых hostname
+- Подключение master-узлов по одному (с паузой 40 сек) — etcd успевает синхронизироваться
+- После перезапуска kubelet нужно чистить cni0/flannel.1
+- Образы лучше скачивать через `ctr image pull` на всех узлах
+- ZFS зеркало создаётся одной командой `zpool attach`
+
+### Восстановление после перерыва
+```bash
+ssh ubuntu@192.168.0.132 "kubectl get nodes"
+ssh root@192.168.0.200 "zpool status vm-pool"
+
